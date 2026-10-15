@@ -18,11 +18,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 class _NoCacheFileView(HomeAssistantView):
-    """Serve one frontend file with Cache-Control: no-cache so clients always revalidate.
-
-    Static paths get heuristic caching; without this, a card update would be invisible
-    to an already-loaded client until its cache expired.
-    """
+    """Serve one frontend file. Unversioned requests always revalidate; ?v= requests are immutable."""
 
     requires_auth = False
 
@@ -35,10 +31,14 @@ class _NoCacheFileView(HomeAssistantView):
 
     async def get(self, request: web.Request) -> web.Response:
         body = await self._hass.async_add_executor_job(self._path.read_bytes)
+        # The script URL carries ?v=<content version>, so a versioned request can be cached
+        # hard: a cold start then registers the card from disk cache instead of waiting on a
+        # network revalidation (HA only waits ~2 s for a custom element before erroring).
+        cache = "public, max-age=31536000, immutable" if "v" in request.query else "no-cache"
         return web.Response(
             body=body,
             content_type=self._content_type,
-            headers={"Cache-Control": "no-cache"},
+            headers={"Cache-Control": cache},
         )
 
 
