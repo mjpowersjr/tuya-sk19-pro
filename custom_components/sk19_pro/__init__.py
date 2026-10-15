@@ -37,6 +37,33 @@ def _asset_version() -> str:
     return str(int(max(f.stat().st_mtime for f in files)))
 
 
+async def _ensure_lovelace_resource(hass: HomeAssistant, url: str) -> bool:
+    """Register the card script as a Lovelace resource (storage mode only).
+
+    Resources are loaded and awaited before dashboards render their cards, which
+    avoids the "Custom element doesn't exist" race on slow clients. Best effort:
+    this relies on HA internals, so any failure just falls back to extra_js_url.
+    """
+    try:
+        data = hass.data.get("lovelace")
+        resources = getattr(data, "resources", None)
+        if resources is None and isinstance(data, dict):
+            resources = data.get("resources")
+        if resources is None or not hasattr(resources, "async_create_item"):
+            return False  # YAML-mode resources are read-only
+        await resources.async_get_info()  # makes sure storage is loaded
+        for item in list(resources.async_items()):
+            if str(item.get("url", "")).split("?")[0] == f"{URL_BASE}/frontend/sk19-card.js":
+                if item.get("url") != url:
+                    await resources.async_update_item(item["id"], {"res_type": "module", "url": url})
+                return True
+        await resources.async_create_item({"res_type": "module", "url": url})
+        return True
+    except Exception:  # noqa: BLE001 - never block setup on a convenience feature
+        _LOGGER.debug("Could not register Lovelace resource", exc_info=True)
+        return False
+
+
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     here = Path(__file__).parent
     version = await hass.async_add_executor_job(_asset_version)
@@ -45,6 +72,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         [StaticPathConfig(URL_BASE, str(here), cache_headers=False)]
     )
     frontend.add_extra_js_url(hass, module_url)
+    await _ensure_lovelace_resource(hass, module_url)
     await panel_custom.async_register_panel(
         hass,
         webcomponent_name="sk19-panel",
