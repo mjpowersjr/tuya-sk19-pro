@@ -337,8 +337,8 @@ class SK19Card extends HTMLElement {
     const presets = [15, 30, 60, 90].map((m) => `<button data-tmr-min="${m}">${m} min</button>`).join("");
     return `<div class="sheet-bg" data-tmr-close><div class="sheet" data-tmr-keep>
       <h3>Sleep timer</h3>
-      ${tm ? `<div class="cd" data-cd="long">${this._cdText(tm, false)}</div><div class="sub">Volume fades out for the last ${tm.fade}s, then the projector turns off</div>`
-           : `<div class="sub">Fade the music out, then turn the projector off</div>`}
+      ${tm ? `<div class="cd" data-cd="long">${this._cdText(tm, false)}</div><div class="sub">The picture and sound fade out over the last ${tm.fade}s, then the projector turns off</div>`
+           : `<div class="sub">Fade the picture and sound out, then turn the projector off</div>`}
       <div class="presets">${presets}</div>
       ${tm ? `<button class="x cancel" data-tmr-cancel>Cancel timer</button>` : ""}
       <button class="x" data-tmr-close>Close</button></div></div>`;

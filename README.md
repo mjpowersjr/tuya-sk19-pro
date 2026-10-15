@@ -27,7 +27,7 @@ also available as `type: custom:sk19-projector-card`.
 ## Sleep timer
 
 The card has a timer button (bottom-left) with 15 / 30 / 60 / 90 minute presets and a live
-countdown. When it runs out, the music volume fades down over the last 60 seconds, then the
+countdown. When it runs out, the music picture (projection and colour-light brightness) and the sound, if on, fade down over the last 60 seconds, then the
 projector turns off and the volume is put back. Switching the projector off by hand cancels the
 timer. A running timer survives a Home Assistant restart.
 
