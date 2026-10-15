@@ -404,41 +404,40 @@
   }
  ],
  "ui": {
-  "m_yuzhou": "img/ui_m_yuzhou.jpg",
-  "my_yuzhou": "img/ui_my_yuzhou.jpg",
-  "m_ziran": "img/ui_m_ziran.jpg",
-  "my_ziran": "img/ui_my_ziran.jpg",
-  "m_qingxu": "img/ui_m_qingxu.jpg",
-  "my_qingxu": "img/ui_my_qingxu.jpg",
-  "m_jieri": "img/ui_m_jieri.jpg",
-  "my_jieri": "img/ui_my_jieri.jpg",
-  "pause": "img/ui_pause.jpg",
-  "single_cycle": "img/ui_single_cycle.jpg",
-  "shuffleImg": "img/ui_shuffleImg.jpg",
-  "sequentialPlaybackImg": "img/ui_sequentialPlaybackImg.jpg",
-  "singleTuneCirculationImg": "img/ui_singleTuneCirculationImg.jpg",
-  "lanya": "img/ui_lanya.jpg"
+  "m_yuzhou": "img/ui_m_yuzhou.png",
+  "my_yuzhou": "img/ui_my_yuzhou.png",
+  "m_ziran": "img/ui_m_ziran.png",
+  "my_ziran": "img/ui_my_ziran.png",
+  "m_qingxu": "img/ui_m_qingxu.png",
+  "my_qingxu": "img/ui_my_qingxu.png",
+  "m_jieri": "img/ui_m_jieri.png",
+  "my_jieri": "img/ui_my_jieri.png",
+  "single_cycle": "img/ui_single_cycle.png",
+  "shuffleImg": "img/ui_shuffleImg.png",
+  "sequentialPlaybackImg": "img/ui_sequentialPlaybackImg.png",
+  "singleTuneCirculationImg": "img/ui_singleTuneCirculationImg.png",
+  "lanya": "img/ui_lanya.png"
  },
  "categories": [
   {
    "name": "Universe",
-   "icon": "img/ui_m_yuzhou.jpg",
-   "icon_active": "img/ui_my_yuzhou.jpg"
+   "icon": "img/ui_m_yuzhou.png",
+   "icon_active": "img/ui_my_yuzhou.png"
   },
   {
    "name": "Natural",
-   "icon": "img/ui_m_ziran.jpg",
-   "icon_active": "img/ui_my_ziran.jpg"
+   "icon": "img/ui_m_ziran.png",
+   "icon_active": "img/ui_my_ziran.png"
   },
   {
    "name": "Animal",
-   "icon": "img/ui_m_qingxu.jpg",
-   "icon_active": "img/ui_my_qingxu.jpg"
+   "icon": "img/ui_m_qingxu.png",
+   "icon_active": "img/ui_my_qingxu.png"
   },
   {
    "name": "Festival",
-   "icon": "img/ui_m_jieri.jpg",
-   "icon_active": "img/ui_my_jieri.jpg"
+   "icon": "img/ui_m_jieri.png",
+   "icon_active": "img/ui_my_jieri.png"
   }
  ]
 }

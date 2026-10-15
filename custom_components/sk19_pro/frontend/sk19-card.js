@@ -123,7 +123,7 @@ class SK19Card extends HTMLElement {
         <div class="row"><div class="hd">Music<div class="sw ${this._on("sound") ? "on" : ""}" data-sw="sound"></div></div>
           <div class="sl"><input type="range" min="0" max="100" value="${vol}" data-num="volume"><span>${vol}%</span></div></div>
         <div class="btns"><button data-order="1" title="Playback order">${this._orderIcon(d)}</button>
-          <button data-sw="play">${this._on("play") ? `<img src="${img(d.ui.pause)}">` : "▶"}</button><button data-nav="next">⏭</button></div>`;
+          <button data-sw="play">${this._on("play") ? "⏸" : "▶"}</button><button data-nav="next">⏭</button></div>`;
     } else if (this._tab === "lighting") {
       const L = this._s("colour"), h = L?.attributes?.hs_color?.[0] ?? 0;
       const bri = Math.round(((L?.attributes?.brightness ?? 0) / 255) * 100);
@@ -139,7 +139,7 @@ class SK19Card extends HTMLElement {
       body = `<div class="row"><div class="hd">Bluetooth<div class="sw ${this._on("bluetooth") ? "on" : ""}" data-sw="bluetooth"></div></div></div>
         <div class="badge ${conn ? "" : "off"}">${conn ? "Bluetooth Connected" : "Bluetooth Disconnected"}</div>
         <div class="disc">♪</div>
-        <div class="row"><div class="btns" style="margin:0"><button data-nav="prev">⏮</button><button data-sw="play">⏯</button><button data-nav="next">⏭</button></div>
+        <div class="row"><div class="btns" style="margin:0"><button data-nav="prev">⏮</button><button data-sw="play">${this._on("play") ? "⏸" : "▶"}</button><button data-nav="next">⏭</button></div>
           <div class="sl" style="margin-top:10px">🔊<input type="range" min="0" max="100" value="${vol}" data-num="volume"><span>${vol}%</span></div></div>`;
     }
     const tab = (k, t) => `<button class="${this._tab === k ? "on" : ""}" data-tab="${k}">${t}</button>`;
