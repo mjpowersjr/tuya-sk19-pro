@@ -13,10 +13,9 @@ const CSS = `
 .tabs button.on { background:var(--accent); }
 .cats { display:flex; justify-content:space-around; margin:12px 0 6px; }
 .cat { text-align:center; font-size:13px; cursor:pointer; width:23%; }
-.cat .ic { width:56px; height:56px; margin:0 auto 4px; border-radius:12px; background:#ffffff14; display:flex; align-items:center; justify-content:center; }
-.cat.on .ic { background:var(--accent); }
-.cat img { width:36px; height:36px; }
-.grid { background:#ffffff10; border-radius:14px; padding:10px 6px; display:grid; grid-template-columns:repeat(4,1fr); gap:10px 4px; max-height:300px; overflow:auto; }
+.cat .ic { width:56px; height:56px; margin:0 auto 4px; }
+.cat img { width:56px; height:56px; display:block; border-radius:12px; }
+.grid { background:#ffffff10; border-radius:14px; padding:10px 6px; display:grid; grid-template-columns:repeat(4,1fr); gap:10px 4px; max-height:min(300px,34vh); overflow:auto; }
 .item { text-align:center; font-size:12px; cursor:pointer; line-height:1.15; }
 .item img { width:64px; height:64px; border-radius:50%; object-fit:cover; border:3px solid transparent; box-sizing:border-box; }
 .item.on img { border-color:var(--accent); }
@@ -31,23 +30,36 @@ const CSS = `
 .sw::after { content:""; position:absolute; top:3px; left:3px; width:22px; height:22px; border-radius:50%; background:#fff; transition:.15s; }
 .sw.on { background:var(--accent); } .sw.on::after { left:25px; }
 .btns { display:flex; justify-content:space-around; margin-top:10px; }
-.btns button { background:#ffffff14; border:0; border-radius:10px; width:64px; height:54px; cursor:pointer; color:#fff; font-size:22px; }
+.btns button { background:#ffffff14; border:0; border-radius:10px; width:64px; height:50px; cursor:pointer; color:#fff; display:flex; align-items:center; justify-content:center; }
 .btns img { width:30px; height:30px; }
-.bottom { display:flex; justify-content:space-between; align-items:center; margin-top:14px; padding:6px 18px 2px; }
-.pwr { width:64px; height:64px; border-radius:50%; background:var(--accent); border:0; color:#fff; font-size:28px; cursor:pointer; }
+.bottom { display:flex; justify-content:center; align-items:center; margin-top:10px; padding:2px 0; }
+.pwr { width:60px; height:60px; border-radius:50%; background:var(--accent); border:0; color:#fff; cursor:pointer; display:flex; align-items:center; justify-content:center; margin:0 auto; }
 .pwr.off { background:#657089; }
 .wheel { width:230px; height:230px; border-radius:50%; margin:14px auto; position:relative; cursor:pointer;
   background:conic-gradient(from 90deg, #ff0000, #ffff00, #00ff00, #00ffff, #0000ff, #ff00ff, #ff0000);
   -webkit-mask:radial-gradient(circle, transparent 58%, #000 59%); mask:radial-gradient(circle, transparent 58%, #000 59%); }
 .wheelbox { position:relative; width:230px; margin:0 auto; }
-.wheelbox .mid { position:absolute; inset:0; margin:auto; width:96px; height:96px; border-radius:50%; background:#055; display:flex; align-items:center; justify-content:center; font-size:38px; }
+.wheelbox .mid { position:absolute; inset:0; margin:auto; width:96px; height:96px; border-radius:50%; background:#055; display:flex; align-items:center; justify-content:center; color:#fff; }
 .dots { display:flex; justify-content:space-around; margin:6px 0 10px; }
 .dot { width:38px; height:38px; border-radius:50%; cursor:pointer; border:3px solid #ffffff55; }
-.disc { width:180px; height:180px; border-radius:50%; margin:18px auto; background:linear-gradient(160deg,#f0a0ff,#8f6df5); display:flex; align-items:center; justify-content:center; font-size:64px; }
+.disc { width:170px; height:170px; border-radius:50%; margin:14px auto; background:linear-gradient(160deg,#f0a0ff,#8f6df5); display:flex; align-items:center; justify-content:center; color:#2a3550; }
 .badge { text-align:center; margin:12px auto 0; background:var(--accent); border-radius:22px; padding:10px 0; width:60%; font-weight:600; }
 .badge.off { background:#657089; }
 .err { padding:16px; color:#ffb4ab; }
 `;
+
+const PATHS = {
+  play: "M8 5v14l11-7z",
+  pause: "M6 19h4V5H6v14zm8-14v14h4V5h-4z",
+  next: "M6 18l8.5-6L6 6v12zM16 6v12h2V6h-2z",
+  prev: "M6 6h2v12H6zm3.5 6l8.5 6V6z",
+  power: "M13 3h-2v10h2V3zm4.83 2.17l-1.42 1.42A6.92 6.92 0 0 1 19 12c0 3.87-3.13 7-7 7a6.995 6.995 0 0 1-4.42-12.42L6.17 5.17A8.932 8.932 0 0 0 3 12a9 9 0 0 0 18 0c0-2.74-1.23-5.18-3.17-6.83z",
+  bulb: "M9 21c0 .55.45 1 1 1h4c.55 0 1-.45 1-1v-1H9v1zm3-19C8.14 2 5 5.14 5 9c0 2.38 1.19 4.47 3 5.74V17c0 .55.45 1 1 1h6c.55 0 1-.45 1-1v-2.26c1.81-1.27 3-3.36 3-5.74 0-3.86-3.14-7-7-7z",
+  note: "M12 3v10.55A4 4 0 1 0 14 17V7h4V3h-6z",
+  volume: "M3 9v6h4l5 5V4L7 9H3zm13.5 3A4.5 4.5 0 0 0 14 7.97v8.05c1.48-.73 2.5-2.25 2.5-4.02z",
+  sun: "M12 7a5 5 0 1 0 0 10 5 5 0 0 0 0-10zM2 13h2v-2H2v2zm18 0h2v-2h-2v2zM11 2v2h2V2h-2zm0 18v2h2v-2h-2zM5.99 4.58L4.58 5.99l1.41 1.42 1.42-1.41-1.42-1.42zm12.02 12.02l-1.42 1.41 1.42 1.42 1.41-1.42-1.41-1.41zM4.58 18.01l1.41 1.41 1.42-1.41-1.42-1.42-1.41 1.42zM18.01 5.99l1.41-1.41-1.41-1.42-1.42 1.42 1.42 1.41z",
+};
+const ic = (n, px = 26) => `<svg viewBox="0 0 24 24" width="${px}" height="${px}" fill="currentColor" aria-hidden="true"><path d="${PATHS[n]}"/></svg>`;
 
 const SLUGS = {
   master: "switch|master", colour: "light|colour", projection: "switch|projection",
@@ -123,29 +135,29 @@ class SK19Card extends HTMLElement {
         <div class="row"><div class="hd">Music<div class="sw ${this._on("sound") ? "on" : ""}" data-sw="sound"></div></div>
           <div class="sl"><input type="range" min="0" max="100" value="${vol}" data-num="volume"><span>${vol}%</span></div></div>
         <div class="btns"><button data-order="1" title="Playback order">${this._orderIcon(d)}</button>
-          <button data-sw="play">${this._on("play") ? "⏸" : "▶"}</button><button data-nextscene title="Next projection">⏭</button></div>`;
+          <button data-sw="play">${ic(this._on("play") ? "pause" : "play")}</button><button data-nextscene title="Next projection">${ic("next")}</button></div>`;
     } else if (this._tab === "lighting") {
       const L = this._s("colour"), h = L?.attributes?.hs_color?.[0] ?? 0;
       const bri = Math.round(((L?.attributes?.brightness ?? 0) / 255) * 100);
       const cs = this._s("cscene")?.state;
       const items = d.lighting.map((l) => `<div class="item ${l.name === cs ? "on" : ""}" data-lscene="${l.name}"><img src="${img(l.image)}"><div>${l.name}</div></div>`).join("");
       body = `<div class="row"><div class="hd">Color<div class="sw ${this._on("colour") ? "on" : ""}" data-sw="colour"></div></div>
-        <div class="wheelbox"><div class="wheel" data-wheel></div><div class="mid" style="background:hsl(${h} 100% 30%)">💡</div></div>
+        <div class="wheelbox"><div class="wheel" data-wheel></div><div class="mid" style="background:hsl(${h} 100% 30%)">${ic("bulb", 40)}</div></div>
         <div class="dots">${PRESETS.map(([hh, c]) => `<div class="dot" data-hue="${hh}" style="background:${c}"></div>`).join("")}</div>
-        <div class="sl">☀<input type="range" min="1" max="100" value="${bri}" data-bri><span>${bri}%</span></div></div>
+        <div class="sl">${ic("sun", 22)}<input type="range" min="1" max="100" value="${bri}" data-bri><span>${bri}%</span></div></div>
         <div class="grid light" style="margin-top:10px">${items}</div>`;
     } else {
       const vol = Number(this._s("volume")?.state ?? 0), conn = this._s("btconn")?.state === "on";
       body = `<div class="row"><div class="hd">Bluetooth<div class="sw ${this._on("bluetooth") ? "on" : ""}" data-sw="bluetooth"></div></div></div>
         <div class="badge ${conn ? "" : "off"}">${conn ? "Bluetooth Connected" : "Bluetooth Disconnected"}</div>
-        <div class="disc">♪</div>
-        <div class="row"><div class="btns" style="margin:0"><button data-nav="prev">⏮</button><button data-sw="play">${this._on("play") ? "⏸" : "▶"}</button><button data-nav="next">⏭</button></div>
-          <div class="sl" style="margin-top:10px">🔊<input type="range" min="0" max="100" value="${vol}" data-num="volume"><span>${vol}%</span></div></div>`;
+        <div class="disc">${ic("note", 80)}</div>
+        <div class="row"><div class="btns" style="margin:0"><button data-nav="prev">${ic("prev")}</button><button data-sw="play">${ic(this._on("play") ? "pause" : "play")}</button><button data-nav="next">${ic("next")}</button></div>
+          <div class="sl" style="margin-top:10px">${ic("volume", 22)}<input type="range" min="0" max="100" value="${vol}" data-num="volume"><span>${vol}%</span></div></div>`;
     }
     const tab = (k, t) => `<button class="${this._tab === k ? "on" : ""}" data-tab="${k}">${t}</button>`;
     this.shadowRoot.innerHTML = `<style>${CSS}</style><div class="wrap"><div class="title">Smart 3D Video Projector Light</div>
       <div class="tabs">${tab("projection", "Projection")}${tab("lighting", "Lighting")}${tab("music", "Music")}</div>${body}
-      <div class="bottom"><span></span><button class="pwr ${this._on("master") ? "" : "off"}" data-sw="master">⏻</button><span></span></div></div>`;
+      <div class="bottom"><span></span><button class="pwr ${this._on("master") ? "" : "off"}" data-sw="master">${ic("power", 30)}</button><span></span></div></div>`;
     this._bind();
   }
   _orderIcon(d) {
@@ -195,7 +207,7 @@ class SK19Panel extends HTMLElement {
   set panel(_) {}
   connectedCallback() {
     if (this._card) return;
-    this.style.cssText = "display:block;padding:16px;background:var(--primary-background-color);min-height:100vh;box-sizing:border-box";
+    this.style.cssText = "display:block;padding:12px;background:var(--primary-background-color);box-sizing:border-box";
     this._card = document.createElement("sk19-projector-card");
     this._card.setConfig({});
     this.appendChild(this._card);
