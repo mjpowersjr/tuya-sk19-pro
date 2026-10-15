@@ -300,8 +300,21 @@ class SK19Card extends HTMLElement {
     if (!s || s.state !== "running") return null;
     return { end: Date.parse(s.attributes.end), minutes: s.attributes.minutes, fade: s.attributes.fade_seconds };
   }
+  // Offset between HA's clock and this device's clock, so the countdown is right even when the
+  // device clock is off. Measured once (round-trip corrected); until then the device clock is used.
+  _syncClock() {
+    if (this._skewState) return;
+    this._skewState = "pending";
+    const t0 = Date.now();
+    fetch(`${BASE_URL}/now`, { cache: "no-store" }).then((r) => r.json()).then((j) => {
+      const t1 = Date.now();
+      this._skew = j.now * 1000 - (t0 + t1) / 2;
+      this._skewState = "done";
+    }).catch(() => { this._skewState = "failed"; });
+  }
   _cdText(tm, short) {
-    const left = Math.max(0, Math.round((tm.end - Date.now()) / 1000));
+    this._syncClock();
+    const left = Math.max(0, Math.round((tm.end - (Date.now() + (this._skew || 0))) / 1000));
     const m = Math.floor(left / 60), sec = left % 60;
     if (short) return m >= 1 ? `${m + (sec ? 1 : 0)}m` : `${sec}s`;
     return `${m}:${String(sec).padStart(2, "0")}`;

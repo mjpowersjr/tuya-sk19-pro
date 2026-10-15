@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import logging
+import time
 from pathlib import Path
 
 from aiohttp import web
@@ -44,6 +45,17 @@ class _NoCacheFileView(HomeAssistantView):
             content_type=self._content_type,
             headers={"Cache-Control": cache},
         )
+
+
+class _ServerTimeView(HomeAssistantView):
+    """Server clock, so the card can show a countdown that is right even if the device clock is off."""
+
+    url = f"{URL_BASE}/now"
+    name = "api:sk19_pro:now"
+    requires_auth = False
+
+    async def get(self, request: web.Request) -> web.Response:
+        return web.json_response({"now": time.time()}, headers={"Cache-Control": "no-store"})
 
 
 def _install_device_config(hass: HomeAssistant) -> bool:
@@ -118,6 +130,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         # registered before the static path so these exact URLs win the route match
         for rel, ctype in (("frontend/sk19-card.js", "application/javascript"), ("catalogue.json", "application/json")):
             hass.http.register_view(_NoCacheFileView(hass, f"{URL_BASE}/{rel}", here / rel, ctype))
+        hass.http.register_view(_ServerTimeView())
         hass.data[f"{DOMAIN}_views"] = True
     await hass.http.async_register_static_paths(
         [StaticPathConfig(URL_BASE, str(here), cache_headers=False)]
