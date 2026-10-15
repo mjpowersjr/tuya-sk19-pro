@@ -5,7 +5,7 @@
 const BASE_URL = "/sk19_pro";
 
 const CSS = `
-:host { display:block; --accent:#7b5cf0; --bg1:#3d4d6d; --bg2:#1b2436; --panel:#2a3550; --muted:#8895b3; }
+:host { display:block; container-type:inline-size; --wheel:230px; --accent:#7b5cf0; --bg1:#3d4d6d; --bg2:#1b2436; --panel:#2a3550; --muted:#8895b3; }
 .wrap { background:linear-gradient(180deg,var(--bg1),var(--bg2)); color:#fff; border-radius:16px; padding:12px; max-width:520px; margin:0 auto; box-sizing:border-box; font-family:var(--paper-font-body1_-_font-family, Roboto, sans-serif); }
 .title { text-align:center; font-weight:600; margin:2px 0 10px; }
 .tabs { display:flex; background:#27324a; border-radius:12px; padding:4px; gap:4px; }
@@ -35,17 +35,48 @@ const CSS = `
 .bottom { display:flex; justify-content:center; align-items:center; margin-top:10px; padding:2px 0; }
 .pwr { width:60px; height:60px; border-radius:50%; background:var(--accent); border:0; color:#fff; cursor:pointer; display:flex; align-items:center; justify-content:center; margin:0 auto; }
 .pwr.off { background:#657089; }
-.wheel { width:230px; height:230px; border-radius:50%; margin:14px auto; position:relative; cursor:pointer;
+.wheel { width:var(--wheel); height:var(--wheel); border-radius:50%; margin:14px auto; position:relative; cursor:pointer;
   background:conic-gradient(from 90deg, #ff0000, #ffff00, #00ff00, #00ffff, #0000ff, #ff00ff, #ff0000);
   -webkit-mask:radial-gradient(circle, transparent 58%, #000 59%); mask:radial-gradient(circle, transparent 58%, #000 59%); }
-.wheelbox { position:relative; width:230px; margin:0 auto; }
-.wheelbox .mid { position:absolute; inset:0; margin:auto; width:96px; height:96px; border-radius:50%; background:#055; display:flex; align-items:center; justify-content:center; color:#fff; }
+.wheelbox { position:relative; width:var(--wheel); margin:0 auto; }
+.wheelbox .mid { position:absolute; inset:0; margin:auto; width:calc(var(--wheel)*.42); height:calc(var(--wheel)*.42); border-radius:50%; background:#055; display:flex; align-items:center; justify-content:center; color:#fff; }
 .dots { display:flex; justify-content:space-around; margin:6px 0 10px; }
 .dot { width:38px; height:38px; border-radius:50%; cursor:pointer; border:3px solid #ffffff55; }
 .disc { width:170px; height:170px; border-radius:50%; margin:14px auto; background:linear-gradient(160deg,#f0a0ff,#8f6df5); display:flex; align-items:center; justify-content:center; color:#2a3550; }
 .badge { text-align:center; margin:12px auto 0; background:var(--accent); border-radius:22px; padding:10px 0; width:60%; font-weight:600; }
 .badge.off { background:#657089; }
 .err { padding:16px; color:#ffb4ab; }
+.body.lighting .b { margin-top:10px; }
+/* tablet / wide card: two columns, bigger touch targets */
+@container (min-width: 640px) {
+  :host { --wheel:300px; }
+  .wrap { max-width:1040px; padding:20px; border-radius:20px; }
+  .title { font-size:20px; margin:4px 0 14px; }
+  .tabs button { font-size:17px; padding:14px 0; }
+  .body.projection, .body.lighting { display:grid; grid-template-columns:minmax(0,1.6fr) minmax(0,1fr); gap:20px; align-items:start; }
+  .body.lighting .b { margin-top:0; }
+  .body.projection .b .row:first-child, .body.lighting .a .row { margin-top:0; }
+  .cats { margin-top:16px; }
+  .cat { font-size:15px; }
+  .cat .ic, .cat img { width:76px; height:76px; }
+  .grid { gap:18px 8px; padding:14px 8px; max-height:min(62vh,560px); }
+  .item { font-size:14px; }
+  .item img { width:92px; height:92px; }
+  .grid.light { grid-template-columns:repeat(2,1fr); max-height:none; }
+  .row .hd { font-size:20px; }
+  .sw { width:58px; height:32px; border-radius:16px; }
+  .sw::after { width:26px; height:26px; }
+  .sw.on::after { left:29px; }
+  .btns button { width:88px; height:64px; }
+  .pwr { width:72px; height:72px; }
+  .dot { width:46px; height:46px; }
+  .disc { width:240px; height:240px; }
+  .badge { width:40%; }
+}
+@container (min-width: 960px) {
+  .grid { grid-template-columns:repeat(5,1fr); }
+  .body.projection, .body.lighting { grid-template-columns:minmax(0,1.9fr) minmax(0,1fr); }
+}
 `;
 
 const PATHS = {
@@ -129,30 +160,30 @@ class SK19Card extends HTMLElement {
       const cats = d.categories.map((c) => `<div class="cat ${c.name === this._cat ? "on" : ""}" data-cat="${c.name}"><div class="ic"><img src="${img(c.name === this._cat ? c.icon_active : c.icon)}"></div>${c.name}</div>`).join("");
       const items = d.projections.filter((p) => p.category === this._cat).map((p) => `<div class="item ${p.name === cur ? "on" : ""}" data-scene="${p.name}"><img src="${img(p.image)}"><div>${p.name}</div></div>`).join("");
       const br = Number(this._s("bright")?.state ?? 0), vol = Number(this._s("volume")?.state ?? 0);
-      body = `<div class="cats">${cats}</div><div class="grid">${items}</div>
+      body = `<div class="body projection"><div class="a"><div class="cats">${cats}</div><div class="grid">${items}</div></div><div class="b">
         <div class="row"><div class="hd">Brightness<div class="sw ${this._on("projection") ? "on" : ""}" data-sw="projection"></div></div>
           <div class="sl"><input type="range" min="0" max="100" value="${br}" data-num="bright"><span>${br}%</span></div></div>
         <div class="row"><div class="hd">Music<div class="sw ${this._on("sound") ? "on" : ""}" data-sw="sound"></div></div>
           <div class="sl"><input type="range" min="0" max="100" value="${vol}" data-num="volume"><span>${vol}%</span></div></div>
         <div class="btns"><button data-order="1" title="Playback order">${this._orderIcon(d)}</button>
-          <button data-sw="play">${ic(this._on("play") ? "pause" : "play")}</button><button data-nextscene title="Next projection">${ic("next")}</button></div>`;
+          <button data-sw="play">${ic(this._on("play") ? "pause" : "play")}</button><button data-nextscene title="Next projection">${ic("next")}</button></div></div></div>`;
     } else if (this._tab === "lighting") {
       const L = this._s("colour"), h = L?.attributes?.hs_color?.[0] ?? 0;
       const bri = Math.round(((L?.attributes?.brightness ?? 0) / 255) * 100);
       const cs = this._s("cscene")?.state;
       const items = d.lighting.map((l) => `<div class="item ${l.name === cs ? "on" : ""}" data-lscene="${l.name}"><img src="${img(l.image)}"><div>${l.name}</div></div>`).join("");
-      body = `<div class="row"><div class="hd">Color<div class="sw ${this._on("colour") ? "on" : ""}" data-sw="colour"></div></div>
+      body = `<div class="body lighting"><div class="a"><div class="row"><div class="hd">Color<div class="sw ${this._on("colour") ? "on" : ""}" data-sw="colour"></div></div>
         <div class="wheelbox"><div class="wheel" data-wheel></div><div class="mid" style="background:hsl(${h} 100% 30%)">${ic("bulb", 40)}</div></div>
         <div class="dots">${PRESETS.map(([hh, c]) => `<div class="dot" data-hue="${hh}" style="background:${c}"></div>`).join("")}</div>
         <div class="sl">${ic("sun", 22)}<input type="range" min="1" max="100" value="${bri}" data-bri><span>${bri}%</span></div></div>
-        <div class="grid light" style="margin-top:10px">${items}</div>`;
+        </div><div class="b"><div class="grid light">${items}</div></div></div>`;
     } else {
       const vol = Number(this._s("volume")?.state ?? 0), conn = this._s("btconn")?.state === "on";
-      body = `<div class="row"><div class="hd">Bluetooth<div class="sw ${this._on("bluetooth") ? "on" : ""}" data-sw="bluetooth"></div></div></div>
+      body = `<div class="body music"><div class="row"><div class="hd">Bluetooth<div class="sw ${this._on("bluetooth") ? "on" : ""}" data-sw="bluetooth"></div></div></div>
         <div class="badge ${conn ? "" : "off"}">${conn ? "Bluetooth Connected" : "Bluetooth Disconnected"}</div>
         <div class="disc">${ic("note", 80)}</div>
         <div class="row"><div class="btns" style="margin:0"><button data-nav="prev">${ic("prev")}</button><button data-sw="play">${ic(this._on("play") ? "pause" : "play")}</button><button data-nav="next">${ic("next")}</button></div>
-          <div class="sl" style="margin-top:10px">${ic("volume", 22)}<input type="range" min="0" max="100" value="${vol}" data-num="volume"><span>${vol}%</span></div></div>`;
+          <div class="sl" style="margin-top:10px">${ic("volume", 22)}<input type="range" min="0" max="100" value="${vol}" data-num="volume"><span>${vol}%</span></div></div></div>`;
     }
     const tab = (k, t) => `<button class="${this._tab === k ? "on" : ""}" data-tab="${k}">${t}</button>`;
     this.shadowRoot.innerHTML = `<style>${CSS}</style><div class="wrap"><div class="title">Smart 3D Video Projector Light</div>
