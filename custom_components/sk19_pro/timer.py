@@ -166,7 +166,7 @@ class SleepTimer:
         except (KeyError, TypeError, ValueError):
             return None
 
-    async def _set_level(self, kind: str, entity_id: str, level: float) -> None:
+    async def _set_level(self, kind: str, entity_id: str, level: float, fading: bool = False) -> None:
         if kind == "light":
             await self.hass.services.async_call(
                 "light", "turn_on", {"entity_id": entity_id, "brightness": max(1, round(level))}, blocking=False
@@ -174,6 +174,9 @@ class SleepTimer:
         else:
             st = self.hass.states.get(entity_id)
             lo = float(st.attributes.get("min", 0)) if st else 0.0
+            if fading and entity_id.endswith("_volume"):
+                # volume 0 mutes the device and flips its "sound" state; stay at 1 (inaudible)
+                lo = max(lo, 1.0)
             await self.hass.services.async_call(
                 "number", "set_value", {"entity_id": entity_id, "value": max(lo, round(level))}, blocking=False
             )
@@ -196,7 +199,7 @@ class SleepTimer:
                 frac = min(1.0, remaining / max(self._fade_s, 1))
                 for kind, eid in targets:
                     if isinstance(self._origs.get(eid), (int, float)):
-                        await self._set_level(kind, eid, self._origs[eid] * frac)
+                        await self._set_level(kind, eid, self._origs[eid] * frac, fading=True)
                 await asyncio.sleep(min(FADE_STEP_S, max(remaining, 0.5)))
         except asyncio.CancelledError:
             raise

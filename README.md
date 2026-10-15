@@ -27,6 +27,11 @@ and icons, and a sleep timer.
 
 ## Is this the device?
 
+<p align="center">
+  <img src="docs/img/product.jpg" alt="The Smart 3D Video Projector Light: projector, box, remote and app" width="300"><br>
+  <sub>Product photo from the retail listing, shown only to help you identify the device.</sub>
+</p>
+
 Tuya product `a5enoboa4fnkicus` / category `xktyd`, listed as "Smart 3D Video Projector Light"
 (or "Smart 3D Projector Light", "SK19 Pro"). A round white projector with a rainbow LED strip, a
 remote, and a Smart Life / Tuya app QR code on the box. If the Smart Life app shows scenes called

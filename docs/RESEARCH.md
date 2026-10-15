@@ -44,3 +44,8 @@ Not through any interface that was found:
 ## Where the names and artwork came from
 The scene names, categories and icons are taken from the panel the Smart Life app caches on the
 phone. `build_catalogue.py` / `build_lighting.py` parse it; the panel itself is not committed.
+- **Volume 0 mutes the device and flips its "sound" state to off; raising the volume again un-mutes
+  playback but does _not_ flip "sound" back on.** Anything that moves the volume should also set the
+  sound switch (the card does when you raise the volume; the sleep timer never fades below 1).
+- A scene written together with the power-on is applied within ~2 s of the command; writing it
+  after the device has reported "on" is what used to take ~20 s.

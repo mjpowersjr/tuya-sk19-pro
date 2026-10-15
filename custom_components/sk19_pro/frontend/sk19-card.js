@@ -224,9 +224,9 @@ class SK19Card extends HTMLElement {
     if (Number.isFinite(n)) this._lastNum[key] = n;
     return this._lastNum[key] ?? 0;
   }
-  // The projector ignores writes while it is off and drops the first ones after it boots, so a scene
-  // picked while it is off turns it on, waits for it to settle, then applies the scene and checks it
-  // stuck (retrying a few times). The card shows "Powering on..." meanwhile.
+  // A scene picked while the projector is off: send the power-on and the scene together (the device
+  // applies both within a couple of seconds), then verify, resending only what has not landed. The
+  // projector ignores writes while off and drops some right after boot, hence the checking.
   async _applyWhenOn(key, option) {
     if (this._on("master") && !this._powering) return this._select(key, option);
     const token = (this._powering = {});
@@ -235,25 +235,26 @@ class SK19Card extends HTMLElement {
     const say = (t) => { this._pendingText = t; this._render(true); };
     try {
       say(`Powering on, then ${option}…`);
-      let lastSend = 0;
-      for (const t0 = Date.now(); !this._on("master"); await sleep(1000)) {
-        if (!alive()) return;
-        if (Date.now() - lastSend > 15000) { lastSend = Date.now(); this._call("switch", "turn_on", { entity_id: this._e("master") }); }
-        if (Date.now() - t0 > 120000) { say("The projector did not power on"); await sleep(4000); return; }
+      const start = Date.now();
+      let lastOn = 0, lastSel = 0;
+      while (alive() && Date.now() - start < 90000) {
+        const on = this._on("master"), ok = this._s(key)?.state === option;
+        if (on && ok && Date.now() - start > 3000) return;
+        if (!on && Date.now() - lastOn > 12000) { lastOn = Date.now(); this._call("switch", "turn_on", { entity_id: this._e("master") }); }
+        if (Date.now() - lastSel > (on ? 4000 : 12000) && !(on && ok)) { lastSel = Date.now(); this._select(key, option); }
+        await sleep(500);
       }
-      await sleep(this._settleMs ?? 20000);
-      for (let attempt = 0; attempt < 3 && alive(); attempt++) {
-        this._select(key, option);
-        for (let i = 0; i < 8 && alive(); i++) {
-          await sleep(1000);
-          if (this._s(key)?.state === option) return;
-        }
-      }
+      if (alive()) { say("The projector did not respond"); await sleep(4000); }
     } finally {
       if (alive()) { this._powering = null; this._pendingText = ""; this._render(true); }
     }
   }
-  _num(key, value) { this._call("number", "set_value", { entity_id: this._e(key), value }); }
+  _num(key, value) {
+    this._call("number", "set_value", { entity_id: this._e(key), value });
+    // Raising the volume un-mutes the speaker without the device flipping its "sound" switch, so
+    // the toggle would stay "off" while music plays. Keep the two in step.
+    if (key === "volume" && value > 0 && !this._on("sound")) this._call("switch", "turn_on", { entity_id: this._e("sound") });
+  }
 
   _render(force) {
     try { this._renderInner(force); } catch (e) { this._showError(e); }
