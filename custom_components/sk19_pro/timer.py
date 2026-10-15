@@ -51,12 +51,16 @@ class SleepTimer:
     # ---- public ---------------------------------------------------------------------------
     async def async_setup(self) -> None:
         data = await self._store.async_load()
-        self._publish()
-        if not data:
+        if not data or not data.get("end"):
+            self._publish()
             return
-        end = dt_util.parse_datetime(data.get("end", ""))
+        end = dt_util.parse_datetime(data["end"])
         if end is None or dt_util.utcnow() - end > _STALE:
+            # expired while HA was down: nothing to turn off, but a fade may have left the volume low
             await self._store.async_save({})
+            self._publish()
+            if data.get("orig_volume") is not None and data.get("base"):
+                self.hass.async_create_task(self._restore_volume(data["base"], data["orig_volume"]))
             return
         self._end, self._minutes = end, int(data.get("minutes", 0))
         self._fade_s, self._base = int(data.get("fade_s", 60)), data.get("base")
@@ -136,9 +140,27 @@ class SleepTimer:
         except Exception:  # keep the power-off alive even if the fade hiccups
             _LOGGER.exception("Sleep timer fade failed")
 
+    async def _wait_available(self, entity_id: str, timeout: int = 120) -> bool:
+        """After a restart the tuya_local entities are unavailable for a while."""
+        for _ in range(timeout // 3):
+            st = self.hass.states.get(entity_id)
+            if st is not None and st.state not in ("unavailable", "unknown"):
+                return True
+            await asyncio.sleep(3)
+        return False
+
+    async def _restore_volume(self, base: str, volume: float) -> None:
+        entity = f"number.{base}_volume"
+        if await self._wait_available(entity):
+            await self.hass.services.async_call(
+                "number", "set_value", {"entity_id": entity, "value": volume}, blocking=False
+            )
+
     async def _on_end(self, _now: datetime) -> None:
         self._finishing = True
         try:
+            if not await self._wait_available(self._master()):
+                _LOGGER.warning("Sleep timer ended but %s is unavailable", self._master())
             await self.hass.services.async_call("switch", "turn_off", {"entity_id": self._master()}, blocking=True)
         except Exception:
             _LOGGER.exception("Sleep timer could not turn the projector off")
