@@ -23,7 +23,7 @@ STATE_ID = "sk19_pro.sleep_timer"
 FADE_STEP_S = 4
 OFF_ATTEMPTS = 3
 OFF_WAIT_S = 20          # how long to wait for the device to confirm power-off before retrying
-REAPPLY_DELAY_S = 8      # after the next power-on, wait this long before re-applying saved levels
+REAPPLY_DELAY_S = 25     # after the next power-on, wait this long (the device drops early writes) before re-applying
 _STALE = timedelta(minutes=2)  # a timer that expired this long ago (while HA was down) is dropped
 
 
@@ -35,8 +35,8 @@ class SleepTimer:
         self._minutes = 0
         self._fade_s = 60
         self._base: str | None = None
-        self._origs: dict[str, float] = {}   # entity_id -> level before the fade started
-        self._pending_restore: dict[str, float] = {}  # levels to put back at the next power-on
+        self._origs: dict[str, Any] = {}   # entity_id -> level/state before the fade started
+        self._pending_restore: dict[str, Any] = {}  # values to put back at the next power-on
         self._last_run: dict[str, Any] | None = None
         self._unsub: list[CALLBACK_TYPE] = []
         self._fade_task: asyncio.Task | None = None
@@ -56,17 +56,36 @@ class SleepTimer:
     def _targets(self) -> list[tuple[str, str]]:
         """(kind, entity_id) for everything that gets faded. Volume only matters when sound is on."""
         b = self._base
-        out = [("number", f"number.{b}_projection_brightness"), ("light", f"light.{b}_colour")]
+        out = [("number", f"number.{b}_projection_brightness")]
+        # Writing the colour light's brightness drops the device out of a lighting scene, so only
+        # fade it when it is a plain colour (no scene selected).
+        scene = self.hass.states.get(f"select.{b}_colour_scene")
+        if scene is None or scene.state in ("unknown", "unavailable", ""):
+            out.append(("light", f"light.{b}_colour"))
         sound = self.hass.states.get(f"switch.{b}_sound")
         if sound is not None and sound.state == "on":
             out.append(("number", f"number.{b}_volume"))
+        return out
+
+    def _remember(self) -> dict[str, float | str]:
+        """Things that are restored but not faded: after a power cycle the device reports defaults
+        for them (music "off", no lighting scene) until something changes."""
+        b = self._base
+        out: dict[str, float | str] = {}
+        for ent in (f"switch.{b}_sound", f"switch.{b}_play"):
+            st = self.hass.states.get(ent)
+            if st is not None and st.state in ("on", "off"):
+                out[ent] = st.state
+        scene = self.hass.states.get(f"select.{b}_colour_scene")
+        if scene is not None and scene.state not in ("unknown", "unavailable", ""):
+            out[f"select.{b}_colour_scene"] = scene.state
         return out
 
     # ---- public ---------------------------------------------------------------------------
     async def async_setup(self) -> None:
         data = await self._store.async_load() or {}
         self._last_run = data.get("last_run")
-        self._pending_restore = {k: float(v) for k, v in (data.get("pending_restore") or {}).items()}
+        self._pending_restore = dict(data.get("pending_restore") or {})
         self._base = data.get("base")
         if self._pending_restore and self._base:
             self._watch_poweron()
@@ -76,7 +95,7 @@ class SleepTimer:
             return
         if dt_util.utcnow() - end > _STALE:
             # expired while HA was down: nothing to turn off, but a fade may have left levels low
-            origs = {k: float(v) for k, v in (data.get("origs") or {}).items()}
+            origs = dict(data.get("origs") or {})
             if origs:
                 self._pending_restore = {**self._pending_restore, **origs}
                 self._watch_poweron()
@@ -86,7 +105,7 @@ class SleepTimer:
             return
         self._end, self._minutes = end, int(data.get("minutes", 0))
         self._fade_s = int(data.get("fade_s", 60))
-        self._origs = {k: float(v) for k, v in (data.get("origs") or {}).items()}
+        self._origs = dict(data.get("origs") or {})
         self._arm()
 
     async def async_start(self, minutes: int, fade_s: int = 60, base: str | None = None) -> None:
@@ -168,6 +187,7 @@ class SleepTimer:
                     lvl = self._level(kind, st) if st else None
                     if lvl is not None:
                         self._origs[eid] = lvl
+                self._origs.update(self._remember())
                 await self._persist()
             while self._end is not None:
                 remaining = (self._end - dt_util.utcnow()).total_seconds()
@@ -175,7 +195,7 @@ class SleepTimer:
                     break
                 frac = min(1.0, remaining / max(self._fade_s, 1))
                 for kind, eid in targets:
-                    if eid in self._origs:
+                    if isinstance(self._origs.get(eid), (int, float)):
                         await self._set_level(kind, eid, self._origs[eid] * frac)
                 await asyncio.sleep(min(FADE_STEP_S, max(remaining, 0.5)))
         except asyncio.CancelledError:
@@ -224,7 +244,7 @@ class SleepTimer:
         origs, base = dict(self._origs), self._base
         self._end, self._origs, self._finishing = None, {}, False
         self._last_run = {"result": result, "attempts": attempts, "at": dt_util.utcnow().isoformat()}
-        if restore and origs and base:
+        if restore and origs and base and result in ("off", "failed", "switched_off_by_hand"):
             # A device that is off ignores writes, so apply now AND again at the next power-on.
             self._pending_restore = origs
             self._watch_poweron()
@@ -234,10 +254,33 @@ class SleepTimer:
             await asyncio.sleep(2)
             await self._apply(origs)
 
-    async def _apply(self, levels: dict[str, float]) -> None:
-        for eid, lvl in levels.items():
-            kind = eid.split(".")[0]
-            await self._set_level("light" if kind == "light" else "number", eid, lvl)
+    async def _apply(self, levels: dict[str, Any]) -> None:
+        for eid, val in levels.items():
+            dom = eid.split(".")[0]
+            if dom == "switch":
+                await self.hass.services.async_call(
+                    "switch", "turn_on" if val == "on" else "turn_off", {"entity_id": eid}, blocking=False
+                )
+            elif dom == "select":
+                await self.hass.services.async_call(
+                    "select", "select_option", {"entity_id": eid, "option": val}, blocking=False
+                )
+            else:
+                await self._set_level("light" if dom == "light" else "number", eid, float(val))
+
+    def _matches(self, eid: str, want: Any) -> bool:
+        st = self.hass.states.get(eid)
+        if st is None:
+            return False
+        dom = eid.split(".")[0]
+        try:
+            if dom == "light":
+                return st.state == "on" and abs(float(st.attributes.get("brightness", -99)) - float(want)) <= 6
+            if dom == "number":
+                return abs(float(st.state) - float(want)) <= 1
+        except (TypeError, ValueError):
+            return False
+        return st.state == want
 
     def _watch_poweron(self) -> None:
         if self._unsub_poweron:
@@ -263,9 +306,15 @@ class SleepTimer:
             self._unsub_poweron = None
         self.hass.async_create_task(self._reapply(levels))
 
-    async def _reapply(self, levels: dict[str, float]) -> None:
+    async def _reapply(self, levels: dict[str, Any]) -> None:
+        """Right after power-on the device drops writes, so wait, apply, and check it stuck."""
         await asyncio.sleep(REAPPLY_DELAY_S)
-        await self._apply(levels)
+        for _attempt in range(3):
+            todo = {e: v for e, v in levels.items() if not self._matches(e, v)}
+            if not todo:
+                break
+            await self._apply(todo)
+            await asyncio.sleep(8)
         await self._persist()
 
     # ---- state ----------------------------------------------------------------------------

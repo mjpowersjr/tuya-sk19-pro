@@ -38,7 +38,8 @@ Not through any interface that was found:
 - Changes made with the **hardware remote** *are* reported (≈1 s). Automatic scene advances are too.
 - **One LAN connection at a time:** while Home Assistant holds it, `sk19.py` from another machine
   can time out (error 901). Disable the Tuya Local entry first if you need the CLI.
-- Out-of-range scene indices: see the probe results in [DPS.md](DPS.md) if present.
+- **Out-of-range scene indices 60-80 are accepted** by the device but all show the same test image; nothing hidden there (see [DPS.md](DPS.md)).
+- **After a power cycle the device reports defaults** (sound "off", play "off", no lighting scene) until something on it changes, even though it resumes playing music. It also drops the first writes for ~30 s after power-on and sometimes drops a turn-on sent shortly after power-off.
 
 ## Where the names and artwork came from
 The scene names, categories and icons are taken from the panel the Smart Life app caches on the

@@ -61,7 +61,14 @@
 | 128 | custom_play | enum other/favorite/custom_mode1-4 | |
 | 129 | ringtone_no | int 0-20 | |
 
-## Firmware (cloud "Get Update Information")
+## Scene indices beyond the app's range (tested 2026-10-15)
+
+The cloud spec describes DP 122 as "ordered 0-80" while the app and `projections.json` cover 0-59.
+Every index **60-80 was written through Home Assistant and read back unchanged** from the device
+(`DP 122 == "60" ... "80"`), so out-of-range values are accepted, not clamped. Visually, **each of
+60-80 shows the same identical test image**; there is no hidden content in those slots, and they
+are not exposed in the card. Values above 80 were not tried.
+
 
 | Module | Version | Firmware key |
 |---|---|---|

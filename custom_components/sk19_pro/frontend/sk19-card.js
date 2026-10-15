@@ -23,8 +23,10 @@ const CSS = `
 .grid.light img { background:#162235; padding:8px; border-radius:50%; }
 .body .a, .body .b { position:relative; }
 .wrap, .bottom { position:relative; }
+.pend { flex:none; text-align:center; font-size:13px; color:#fff; background:var(--accent); border-radius:10px; padding:6px 10px; margin-top:8px; }
 .tmr { position:absolute; left:6px; top:50%; transform:translateY(-50%); height:44px; min-width:44px; padding:0 12px; border-radius:22px; background:#27324a; border:0; color:#fff; display:flex; gap:6px; align-items:center; justify-content:center; cursor:pointer; font-size:13px; }
 .tmr.run { background:var(--accent); }
+.tmr small:empty { display:none; }
 .sheet-bg { position:absolute; inset:0; background:#000a; border-radius:16px; display:flex; align-items:flex-end; z-index:5; }
 .sheet { width:100%; box-sizing:border-box; background:var(--panel); border-radius:16px; padding:16px; margin:8px; }
 .sheet h3 { margin:0 0 4px; font-size:17px; text-align:center; font-weight:600; }
@@ -222,6 +224,35 @@ class SK19Card extends HTMLElement {
     if (Number.isFinite(n)) this._lastNum[key] = n;
     return this._lastNum[key] ?? 0;
   }
+  // The projector ignores writes while it is off and drops the first ones after it boots, so a scene
+  // picked while it is off turns it on, waits for it to settle, then applies the scene and checks it
+  // stuck (retrying a few times). The card shows "Powering on..." meanwhile.
+  async _applyWhenOn(key, option) {
+    if (this._on("master") && !this._powering) return this._select(key, option);
+    const token = (this._powering = {});
+    const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+    const alive = () => this._powering === token;
+    const say = (t) => { this._pendingText = t; this._render(true); };
+    try {
+      say(`Powering on, then ${option}…`);
+      let lastSend = 0;
+      for (const t0 = Date.now(); !this._on("master"); await sleep(1000)) {
+        if (!alive()) return;
+        if (Date.now() - lastSend > 15000) { lastSend = Date.now(); this._call("switch", "turn_on", { entity_id: this._e("master") }); }
+        if (Date.now() - t0 > 120000) { say("The projector did not power on"); await sleep(4000); return; }
+      }
+      await sleep(this._settleMs ?? 20000);
+      for (let attempt = 0; attempt < 3 && alive(); attempt++) {
+        this._select(key, option);
+        for (let i = 0; i < 8 && alive(); i++) {
+          await sleep(1000);
+          if (this._s(key)?.state === option) return;
+        }
+      }
+    } finally {
+      if (alive()) { this._powering = null; this._pendingText = ""; this._render(true); }
+    }
+  }
   _num(key, value) { this._call("number", "set_value", { entity_id: this._e(key), value }); }
 
   _render(force) {
@@ -238,7 +269,7 @@ class SK19Card extends HTMLElement {
     if (!b) { this.shadowRoot.innerHTML = `<style>${CSS}</style><div class="wrap err">SK19 entities not found. Add the device in the Tuya Local integration first.</div>`; return; }
     const keys = Object.keys(SLUGS);
     const tm = this._timer();
-    const sig = this._tab + "|" + this._cat + "|" + this._sheet + "|" + (tm ? tm.end : "") + "|" + keys.map((k) => { const s = this._s(k); return s ? s.state + (s.attributes.brightness ?? "") + (s.attributes.hs_color ?? "") : "-"; }).join(",");
+    const sig = this._tab + "|" + this._cat + "|" + this._sheet + "|" + (this._pendingText || "") + "|" + (tm ? tm.end : "") + "|" + keys.map((k) => { const s = this._s(k); return s ? s.state + (s.attributes.brightness ?? "") + (s.attributes.hs_color ?? "") : "-"; }).join(",");
     if (!force && sig === this._sig) return;
     if (this._dragging) return;
     this._sig = sig;
@@ -290,7 +321,7 @@ class SK19Card extends HTMLElement {
     const tab = (k, t) => `<button class="${this._tab === k ? "on" : ""}" data-tab="${k}">${t}</button>`;
     const keep = this._saveScroll();
     this.shadowRoot.innerHTML = `<style>${CSS}</style><div class="wrap"><div class="title">Smart 3D Video Projector Light</div>
-      <div class="tabs">${tab("projection", "Projection")}${tab("lighting", "Lighting")}${tab("music", "Music")}</div>${body}
+      <div class="tabs">${tab("projection", "Projection")}${tab("lighting", "Lighting")}${tab("music", "Music")}</div>${this._pendingText ? `<div class="pend">${this._pendingText}</div>` : ""}${body}
       <div class="bottom"><button class="tmr ${tm ? "run" : ""}" data-tmr-open aria-label="Sleep timer">${ic("timer", 22)}<small data-cd="short">${tm ? this._cdText(tm, true) : ""}</small></button><span></span><button class="pwr ${this._on("master") ? "" : "off"}" data-sw="master">${ic("power", 30)}</button><span></span></div>${this._sheetHtml(tm)}</div>`;
     this._bind();
     this._tickSetup(tm);
@@ -408,8 +439,8 @@ class SK19Card extends HTMLElement {
     $("[data-tmr-cancel]").forEach((el) => (el.onclick = () => { this._call("sk19_pro", "cancel_timer", {}); this._sheet = false; this._render(true); }));
     $("[data-tab]").forEach((el) => (el.onclick = () => { this._tab = el.dataset.tab; this._render(true); }));
     $("[data-cat]").forEach((el) => (el.onclick = () => { this._cat = el.dataset.cat; this._render(true); }));
-    $("[data-scene]").forEach((el) => (el.onclick = () => this._select("pscene", el.dataset.scene)));
-    $("[data-lscene]").forEach((el) => (el.onclick = () => this._select("cscene", el.dataset.lscene)));
+    $("[data-scene]").forEach((el) => (el.onclick = () => this._applyWhenOn("pscene", el.dataset.scene)));
+    $("[data-lscene]").forEach((el) => (el.onclick = () => this._applyWhenOn("cscene", el.dataset.lscene)));
     $("[data-sw]").forEach((el) => (el.onclick = () => this._toggle(el.dataset.sw)));
     $("[data-nav]").forEach((el) => (el.onclick = () => this._call("button", "press", { entity_id: this._e(el.dataset.nav) })));
     $("[data-nextscene]").forEach((el) => (el.onclick = () => {
