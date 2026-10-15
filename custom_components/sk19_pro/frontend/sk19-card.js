@@ -123,7 +123,7 @@ class SK19Card extends HTMLElement {
         <div class="row"><div class="hd">Music<div class="sw ${this._on("sound") ? "on" : ""}" data-sw="sound"></div></div>
           <div class="sl"><input type="range" min="0" max="100" value="${vol}" data-num="volume"><span>${vol}%</span></div></div>
         <div class="btns"><button data-order="1" title="Playback order">${this._orderIcon(d)}</button>
-          <button data-sw="play">${this._on("play") ? "⏸" : "▶"}</button><button data-nav="next">⏭</button></div>`;
+          <button data-sw="play">${this._on("play") ? "⏸" : "▶"}</button><button data-nextscene title="Next projection">⏭</button></div>`;
     } else if (this._tab === "lighting") {
       const L = this._s("colour"), h = L?.attributes?.hs_color?.[0] ?? 0;
       const bri = Math.round(((L?.attributes?.brightness ?? 0) / 255) * 100);
@@ -161,6 +161,11 @@ class SK19Card extends HTMLElement {
     $("[data-lscene]").forEach((el) => (el.onclick = () => this._select("cscene", el.dataset.lscene)));
     $("[data-sw]").forEach((el) => (el.onclick = () => this._toggle(el.dataset.sw)));
     $("[data-nav]").forEach((el) => (el.onclick = () => this._call("button", "press", { entity_id: this._e(el.dataset.nav) })));
+    $("[data-nextscene]").forEach((el) => (el.onclick = () => {
+      const names = this._cat_data.projections.map((p) => p.name);
+      const i = names.indexOf(this._s("pscene")?.state);
+      this._select("pscene", names[(i + 1) % names.length]);
+    }));
     $("[data-order]").forEach((el) => (el.onclick = () => {
       const o = this._s("order")?.state; this._select("order", ORDERS[(ORDERS.indexOf(o) + 1) % ORDERS.length]);
     }));
