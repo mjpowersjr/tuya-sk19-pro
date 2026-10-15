@@ -21,6 +21,12 @@ const CSS = `
 .item.on img { border-color:var(--accent); }
 .grid.light { grid-template-columns:repeat(4,1fr); background:#0e1624; }
 .grid.light img { background:#162235; padding:8px; border-radius:50%; }
+.body .a, .body .b { position:relative; }
+.grid.more { -webkit-mask-image:linear-gradient(to bottom,#000 calc(100% - 34px),transparent); mask-image:linear-gradient(to bottom,#000 calc(100% - 34px),transparent); }
+.more-hint { position:absolute; width:11px; height:11px; margin-left:-6px; border-right:2px solid #fff; border-bottom:2px solid #fff; transform:rotate(45deg); opacity:0; pointer-events:none; transition:opacity .2s; }
+.more-hint.on { opacity:.75; animation:hint-bob 1.6s ease-in-out infinite; }
+@keyframes hint-bob { 0%,100% { margin-top:0; } 50% { margin-top:5px; } }
+@media (prefers-reduced-motion:reduce) { .more-hint.on { animation:none; } }
 .row { background:#ffffff10; border-radius:14px; padding:10px 12px; margin-top:10px; }
 .row .hd { display:flex; justify-content:space-between; align-items:center; font-size:17px; margin-bottom:6px; }
 .sl { display:flex; align-items:center; gap:10px; }
@@ -126,7 +132,7 @@ class SK19Card extends HTMLElement {
   constructor() {
     super();
     this.attachShadow({ mode: "open" });
-    this._onResize = () => { try { this._fit(); } catch (e) { console.error(e); } };
+    this._onResize = () => { try { this._fit(); this._hints(); } catch (e) { console.error(e); } };
     this._tab = "projection";
     this._cat = null;
     this._cfg = {};
@@ -253,6 +259,24 @@ class SK19Card extends HTMLElement {
       <div class="bottom"><span></span><button class="pwr ${this._on("master") ? "" : "off"}" data-sw="master">${ic("power", 30)}</button><span></span></div></div>`;
     this._bind();
     this._fit();
+    this._hints();
+  }
+  // Soft fade + chevron at the bottom of a scene list while more scenes are out of view.
+  _hints() {
+    this.shadowRoot.querySelectorAll(".grid").forEach((g) => {
+      let h = g.parentElement.querySelector(":scope > .more-hint");
+      if (!h) { h = document.createElement("div"); h.className = "more-hint"; g.after(h); }
+      const update = () => {
+        const more = g.scrollHeight - g.clientHeight - g.scrollTop > 6;
+        g.classList.toggle("more", more);
+        h.classList.toggle("on", more);
+        h.style.top = g.offsetTop + g.offsetHeight - 22 + "px";
+        h.style.left = g.offsetLeft + g.offsetWidth / 2 + "px";
+      };
+      g.onscroll = update;
+      update();
+      requestAnimationFrame(update);
+    });
   }
   _orderIcon(d) {
     const o = this._s("order")?.state;
