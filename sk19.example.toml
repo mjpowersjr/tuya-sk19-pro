@@ -1,0 +1,7 @@
+# Copy to sk19.toml (or ~/.config/sk19/config.toml) and chmod 600.
+# Any field can also be set via env: SK19_DEVICE_ID, SK19_HOST, SK19_LOCAL_KEY, SK19_VERSION.
+[device]
+device_id = "your-tuya-device-id"   # Tuya IoT Platform -> Devices, or the Smart Life app
+host      = "192.168.1.50"          # LAN IP of the projector
+local_key = "xxxxxxxxxxxxxxxx"      # Tuya IoT Platform -> API Explorer -> Query Device Details
+version   = 3.5                     # Tuya LAN protocol version

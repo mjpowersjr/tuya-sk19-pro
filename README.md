@@ -13,7 +13,7 @@ names and icons.
    This restores the tuya-local device config and adds the **Projector** sidebar entry.
    Restart once more if it says it installed the device config.
 4. Add integration → **Tuya Local** → enter device ID, host and local key
-   (`device.json`, see below) → choose *Projector light*.
+   (see Credentials below) → choose *Projector light*.
 
 The panel finds the entities by name; no dashboard editing needed. The card is
 also available as `type: custom:sk19-projector-card`.
@@ -29,8 +29,10 @@ also available as `type: custom:sk19-projector-card`.
 
 ## Credentials
 
-`device.json` (device id + local key) is never committed. Keep it locally; get the key
-from the Tuya IoT Platform (Cloud → API Explorer → Query Device Details).
+The local tools read `sk19.toml` (gitignored; copy `sk19.example.toml`, `chmod 600`) or the
+env vars `SK19_DEVICE_ID`, `SK19_HOST`, `SK19_LOCAL_KEY`. The local key is never committed.
+Get it from the Tuya IoT Platform (Cloud → API Explorer → Query Device Details).
+In Home Assistant you enter the same three values once in the Tuya Local setup form.
 
 ## Notes
 

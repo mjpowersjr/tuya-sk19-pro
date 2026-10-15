@@ -1,7 +1,7 @@
 # SK19 Pro ("Smart 3D Video Projector Light") — Tuya data points
 
 - Device ID `<device-id>`, product `a5enoboa4fnkicus`, category `xktyd`, model id `e1oekjec`
-- LAN: `<device-ip>`, TCP 6668, **protocol 3.5**. Local key is in `device.json` (gitignored).
+- LAN: `<device-ip>`, TCP 6668, **protocol 3.5**. Local key lives in the gitignored `sk19.toml`.
 - Source: cloud "Query Things Data Model" + live local `status()`.
 
 ## Live values observed (2026-10-14)
