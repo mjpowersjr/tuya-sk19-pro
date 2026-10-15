@@ -145,7 +145,7 @@ class SK19Card extends HTMLElement {
   constructor() {
     super();
     this.attachShadow({ mode: "open" });
-    this._onResize = () => { try { this._fit(); this._hints(); } catch (e) { console.error(e); } };
+    this._onResize = () => { try { this._fit(); this._fitWheel(); this._hints(); } catch (e) { console.error(e); } };
     this._tab = "projection";
     this._cat = null;
     this._cfg = {};
@@ -275,11 +275,24 @@ class SK19Card extends HTMLElement {
     this._bind();
     this._tickSetup(tm);
     this._fit();
+    this._fitWheel();
     this._hints();
+  }
+  // Lighting tab, single column (phones): shrink the colour wheel just enough that every lighting
+  // scene fits without scrolling. Never below MIN; two-column layouts and other tabs are untouched.
+  _fitWheel() {
+    this.style.removeProperty("--wheel");
+    const sr = this.shadowRoot;
+    const g = sr.querySelector(".body.lighting .b"), w = sr.querySelector(".wheel"), a = sr.querySelector(".body.lighting .a");
+    if (!g || !w || !a || g.offsetTop <= a.offsetTop + 8) return;
+    const need = g.scrollHeight - g.clientHeight;
+    if (need <= 1) return;
+    const MIN = 140;
+    this.style.setProperty("--wheel", Math.max(MIN, Math.floor(w.offsetWidth - need)) + "px");
   }
   // Soft fade + chevron at the bottom of a scene list while more scenes are out of view.
   _hints() {
-    this.shadowRoot.querySelectorAll(".grid").forEach((g) => {
+    this.shadowRoot.querySelectorAll(".body .a .grid, .body.lighting .b").forEach((g) => {
       let h = g.parentElement.querySelector(":scope > .more-hint");
       if (!h) { h = document.createElement("div"); h.className = "more-hint"; g.after(h); }
       const update = () => {
