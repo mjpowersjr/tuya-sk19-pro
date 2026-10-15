@@ -30,17 +30,26 @@ def _install_device_config(hass: HomeAssistant) -> bool:
     return True
 
 
+def _asset_version() -> str:
+    """Changes whenever the shipped frontend files change, so clients never run stale JS."""
+    here = Path(__file__).parent
+    files = [here / "frontend" / "sk19-card.js", here / "catalogue.json"]
+    return str(int(max(f.stat().st_mtime for f in files)))
+
+
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     here = Path(__file__).parent
+    version = await hass.async_add_executor_job(_asset_version)
+    module_url = f"{URL_BASE}/frontend/sk19-card.js?v={version}"
     await hass.http.async_register_static_paths(
         [StaticPathConfig(URL_BASE, str(here), cache_headers=False)]
     )
-    frontend.add_extra_js_url(hass, f"{URL_BASE}/frontend/sk19-card.js")
+    frontend.add_extra_js_url(hass, module_url)
     await panel_custom.async_register_panel(
         hass,
         webcomponent_name="sk19-panel",
         frontend_url_path="sk19-projector",
-        module_url=f"{URL_BASE}/frontend/sk19-card.js",
+        module_url=module_url,
         sidebar_title="Projector",
         sidebar_icon="mdi:movie-open-play",
         require_admin=False,

@@ -59,7 +59,7 @@ const CSS = `
   .cats { margin-top:16px; }
   .cat { font-size:15px; }
   .cat .ic, .cat img { width:76px; height:76px; }
-  .grid { gap:18px 8px; padding:14px 8px; max-height:min(62vh,560px); }
+  .grid { gap:18px 8px; padding:14px 8px; max-height:min(46vh,520px); }
   .item { font-size:14px; }
   .item img { width:92px; height:92px; }
   .grid.light { grid-template-columns:repeat(2,1fr); max-height:none; }
@@ -121,7 +121,7 @@ class SK19Card extends HTMLElement {
   }
   async _load() {
     this._loading = true;
-    try { this._cat_data = await (await fetch(`${BASE_URL}/catalogue.json`)).json(); }
+    try { this._cat_data = await (await fetch(`${BASE_URL}/catalogue.json`, { cache: "no-cache" })).json(); }
     catch (e) { this._error = "Could not load catalogue.json"; }
     this._loading = false; this._render(true);
   }
