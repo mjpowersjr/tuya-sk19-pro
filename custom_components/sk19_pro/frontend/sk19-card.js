@@ -47,22 +47,19 @@ const CSS = `
 .badge.off { background:#657089; }
 .err { padding:16px; color:#ffb4ab; }
 .body.lighting .b { margin-top:10px; }
-/* tablet / wide card: two columns, bigger touch targets */
+/* wider card (tablet): bigger touch targets; single column, grows taller in portrait */
 @container (min-width: 640px) {
   :host { --wheel:300px; }
   .wrap { max-width:1040px; padding:20px; border-radius:20px; }
   .title { font-size:20px; margin:4px 0 14px; }
   .tabs button { font-size:17px; padding:14px 0; }
-  .body.projection, .body.lighting { display:grid; grid-template-columns:minmax(0,1.6fr) minmax(0,1fr); gap:20px; align-items:start; }
-  .body.lighting .b { margin-top:0; }
-  .body.projection .b .row:first-child, .body.lighting .a .row { margin-top:0; }
   .cats { margin-top:16px; }
   .cat { font-size:15px; }
   .cat .ic, .cat img { width:76px; height:76px; }
-  .grid { gap:18px 8px; padding:14px 8px; max-height:min(46vh,520px); }
+  .grid { grid-template-columns:repeat(5,1fr); gap:18px 8px; padding:14px 8px; max-height:none; overflow:visible; }
   .item { font-size:14px; }
   .item img { width:92px; height:92px; }
-  .grid.light { grid-template-columns:repeat(2,1fr); max-height:none; }
+  .grid.light { grid-template-columns:repeat(4,1fr); max-height:none; }
   .row .hd { font-size:20px; }
   .sw { width:58px; height:32px; border-radius:16px; }
   .sw::after { width:26px; height:26px; }
@@ -73,9 +70,19 @@ const CSS = `
   .disc { width:240px; height:240px; }
   .badge { width:40%; }
 }
-@container (min-width: 960px) {
-  .grid { grid-template-columns:repeat(5,1fr); }
-  .body.projection, .body.lighting { grid-template-columns:minmax(0,1.9fr) minmax(0,1fr); }
+/* two columns only when the tablet is held landscape */
+@media (orientation: landscape) {
+  @container (min-width: 640px) {
+    .body.projection, .body.lighting { display:grid; grid-template-columns:minmax(0,1.6fr) minmax(0,1fr); gap:20px; align-items:start; }
+    .body.lighting .b { margin-top:0; }
+    .body.projection .b .row:first-child, .body.lighting .a .row { margin-top:0; }
+    .grid { grid-template-columns:repeat(4,1fr); max-height:min(46vh,520px); overflow:auto; }
+    .grid.light { grid-template-columns:repeat(2,1fr); }
+  }
+  @container (min-width: 960px) {
+    .grid { grid-template-columns:repeat(5,1fr); }
+    .body.projection, .body.lighting { grid-template-columns:minmax(0,1.9fr) minmax(0,1fr); }
+  }
 }
 `;
 
