@@ -237,6 +237,14 @@ class SK19Card extends HTMLElement {
     const cur = this._s("pscene")?.state;
     const curP = d.projections.find((p) => p.name === cur);
     if (this._cat === null) this._cat = curP ? curP.category : d.categories[0].name;
+    // The projector advances scenes on its own: follow it into the new scene's category and bring
+    // the active scene into view (only when it changed, so manual browsing is left alone).
+    let revealActive = false;
+    if (cur !== this._lastScene) {
+      if (this._lastScene !== undefined && curP && curP.category !== this._cat) { this._cat = curP.category; this._savedScroll = {}; }
+      if (this._lastScene !== undefined) revealActive = true;
+      this._lastScene = cur;
+    }
     const img = (p) => `${BASE_URL}/${p}`;
     let body = "";
     if (this._tab === "projection") {
@@ -269,6 +277,7 @@ class SK19Card extends HTMLElement {
           <div class="sl" style="margin-top:10px">${ic("volume", 22)}<input type="range" min="0" max="100" value="${vol}" data-num="volume"><span>${vol}%</span></div></div></div>`;
     }
     const tab = (k, t) => `<button class="${this._tab === k ? "on" : ""}" data-tab="${k}">${t}</button>`;
+    const keep = this._saveScroll();
     this.shadowRoot.innerHTML = `<style>${CSS}</style><div class="wrap"><div class="title">Smart 3D Video Projector Light</div>
       <div class="tabs">${tab("projection", "Projection")}${tab("lighting", "Lighting")}${tab("music", "Music")}</div>${body}
       <div class="bottom"><button class="tmr ${tm ? "run" : ""}" data-tmr-open aria-label="Sleep timer">${ic("timer", 22)}<small data-cd="short">${tm ? this._cdText(tm, true) : ""}</small></button><span></span><button class="pwr ${this._on("master") ? "" : "off"}" data-sw="master">${ic("power", 30)}</button><span></span></div>${this._sheetHtml(tm)}</div>`;
@@ -276,7 +285,26 @@ class SK19Card extends HTMLElement {
     this._tickSetup(tm);
     this._fit();
     this._fitWheel();
+    this._restoreScroll(keep, revealActive);
     this._hints();
+  }
+  // Scroll position of the scene lists survives re-renders (they rebuild the DOM on every state change).
+  _saveScroll() {
+    const out = { tab: this._tab, cat: this._cat, pos: {} };
+    this.shadowRoot.querySelectorAll(".body .a .grid, .body.lighting .b").forEach((g, i) => { out.pos[i] = g.scrollTop; });
+    return out;
+  }
+  _restoreScroll(keep, reveal) {
+    const grids = this.shadowRoot.querySelectorAll(".body .a .grid, .body.lighting .b");
+    grids.forEach((g, i) => {
+      if (keep && keep.tab === this._tab && keep.cat === this._cat && keep.pos[i] != null) g.scrollTop = keep.pos[i];
+    });
+    if (!reveal) return;
+    const g = this.shadowRoot.querySelector(".body .a .grid");
+    const it = g && g.querySelector(".item.on");
+    if (!it) return;
+    const gr = g.getBoundingClientRect(), ir = it.getBoundingClientRect();
+    if (ir.top < gr.top || ir.bottom > gr.bottom) g.scrollTop += ir.top - gr.top - (g.clientHeight - ir.height) / 2;
   }
   // Lighting tab, single column (phones): shrink the colour wheel just enough that every lighting
   // scene fits without scrolling. Never below MIN; two-column layouts and other tabs are untouched.
