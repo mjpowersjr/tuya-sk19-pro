@@ -309,39 +309,22 @@ class SK19Panel extends HTMLElement {
   }
 }
 
-if (!customElements.get("sk19-projector-card")) customElements.define("sk19-projector-card", SK19Card);
-if (!customElements.get("sk19-panel")) customElements.define("sk19-panel", SK19Panel);
+function register() {
+  for (const [name, cls] of [["sk19-projector-card", SK19Card], ["sk19-panel", SK19Panel]]) {
+    if (customElements.get(name)) continue;
+    try { customElements.define(name, cls); }
+    catch (e) { try { customElements.define(name, class extends cls {}); } catch (e2) { /* registry refused; nothing else to try */ } }
+  }
+}
+register();
+// HA swaps in a scoped-registry polyfill shortly after start. Anything defined on the native
+// registry before that is invisible to the polyfill's get()/whenDefined(), so Lovelace reports
+// "Custom element doesn't exist" when this script wins the race (it always does once cached).
+// Register again whenever the registry object is replaced.
+let seenRegistry = window.customElements;
+const registryWatch = setInterval(() => {
+  if (window.customElements !== seenRegistry) { seenRegistry = window.customElements; register(); }
+}, 20);
+setTimeout(() => clearInterval(registryWatch), 30000);
 window.customCards = window.customCards || [];
 window.customCards.push({ type: "sk19-projector-card", name: "SK19 Pro projector", description: "App-style projector controls" });
-
-/* Field diagnostics: on the dashboard/panel URLs, report what this client sees to the HA log.
- * Everything here is read-only; it only emits one system_log entry per page load. */
-(function sk19Diag() {
-  const t0 = performance.now(), errors = [];
-  window.addEventListener("error", (e) => errors.push(`${e.message || e.type} @${(e.filename || "").replace(location.origin, "")}:${e.lineno || 0}`), true);
-  window.addEventListener("unhandledrejection", (e) => errors.push("rejection: " + String((e.reason && (e.reason.message || e.reason.type)) || e.reason)));
-  const findAll = (root, sel, out = []) => {
-    if (root.querySelectorAll) root.querySelectorAll(sel).forEach((x) => out.push(x));
-    const all = root.querySelectorAll ? root.querySelectorAll("*") : [];
-    for (const el of all) if (el.shadowRoot) findAll(el.shadowRoot, sel, out);
-    return out;
-  };
-  const report = async (label) => {
-    // path is checked now, not at load: a cold start into the default dashboard begins at "/"
-    if (!/^\/sk19-(dashboard|projector)/.test(location.pathname)) return;
-    const ha = document.querySelector("home-assistant");
-    const hass = ha && ha.hass;
-    const r = { label, path: location.pathname, ua: navigator.userAgent, loadedAtMs: Math.round(t0), nowMs: Math.round(performance.now()),
-      user: hass && hass.user && hass.user.name, admin: hass && hass.user && hass.user.is_admin,
-      defined: !!customElements.get("sk19-projector-card"), errors: errors.slice(0, 8) };
-    try { r.perf = performance.getEntriesByType("resource").filter((e) => /sk19_pro/.test(e.name)).map((e) => ({ u: e.name.replace(location.origin, ""), ms: Math.round(e.duration), status: e.responseStatus, bytes: e.transferSize })); } catch (e) { r.perfErr = String(e); }
-    try { r.cards = findAll(document, "sk19-projector-card").length; r.errorCards = findAll(document, "hui-error-card").map((x) => ((x.shadowRoot && x.shadowRoot.textContent) || x.textContent || "").trim().slice(0, 160)); } catch (e) { r.domErr = String(e); }
-    if (hass) {
-      try { r.resources = (await hass.callWS({ type: "lovelace/resources" })).map((x) => x.url).filter((u) => /sk19|button-card/.test(u)); } catch (e) { r.resErr = String((e && (e.message || e.code)) || JSON.stringify(e)); }
-      try { r.cfg = JSON.stringify(await hass.callWS({ type: "lovelace/config", url_path: "sk19-dashboard", force: false })).slice(0, 260); } catch (e) { r.cfgErr = String((e && (e.message || e.code)) || JSON.stringify(e)); }
-      try { await hass.callService("system_log", "write", { message: "SK19 DIAG " + JSON.stringify(r), level: "warning", logger: "sk19_pro.frontend" }); } catch (e) { /* nothing else we can do */ }
-    }
-  };
-  setTimeout(() => report("t+5s"), 5000);
-  setTimeout(() => report("t+15s"), 15000);
-})();
