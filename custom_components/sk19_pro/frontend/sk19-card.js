@@ -138,11 +138,33 @@ class SK19Card extends HTMLElement {
     requestAnimationFrame(() => this._fit());
   }
   disconnectedCallback() { window.removeEventListener("resize", this._onResize); }
+  // nearest ancestor (crossing shadow roots) that is scrollable and currently overflowing
+  _overflowingScroller() {
+    const up = (n) => n.assignedSlot || n.parentElement || (n.getRootNode() instanceof ShadowRoot ? n.getRootNode().host : null);
+    for (let n = up(this); n; n = up(n)) {
+      if (n === document.documentElement || n === document.body) break;
+      const oy = getComputedStyle(n).overflowY;
+      if ((oy === "auto" || oy === "scroll") && n.scrollHeight > n.clientHeight + 1) return n;
+    }
+    const se = document.scrollingElement;
+    return se && se.scrollHeight > se.clientHeight + 1 ? se : null;
+  }
   _fit() {
     const w = this.shadowRoot && this.shadowRoot.querySelector(".wrap");
     if (!w) return;
     const top = w.getBoundingClientRect().top;
-    w.style.height = Math.max(440, Math.floor(window.innerHeight - top - 12)) + "px";
+    let h = Math.max(440, Math.floor(window.innerHeight - top - 12));
+    w.style.height = h + "px";
+    // self-correct: if something below the card (e.g. a visible Android nav bar) still makes the page
+    // scroll, shrink the card by exactly that overflow. No overflow -> no change (phones stay as is).
+    for (let i = 0; i < 2; i++) {
+      const sc = this._overflowingScroller();
+      if (!sc) break;
+      const over = sc.scrollHeight - sc.clientHeight;
+      if (over <= 0 || h - over < 440) break;
+      h -= over;
+      w.style.height = h + "px";
+    }
   }
   setConfig(c) { this._cfg = c || {}; }
   getCardSize() { return 8; }
