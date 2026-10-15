@@ -15,7 +15,13 @@ names and icons.
 4. Add integration → **Tuya Local** → enter device ID, host and local key
    (see Credentials below) → choose *Projector light*.
 
-The panel finds the entities by name; no dashboard editing needed. The card is
+The panel finds the entities by name; no dashboard editing needed.
+
+**Optional dashboard** (needed only if you want the projector as a *Default dashboard*, e.g. on a Fire
+tablet): Settings → Dashboards → Add dashboard → *New from scratch*, title `Projector`, URL
+`sk19-dashboard`, then in its raw editor use:
+`views: [{title: Projector, path: projector, panel: true, cards: [{type: "custom:sk19-projector-card"}]}]`.
+When that dashboard exists the integration hides its own sidebar entry so you don't see two. The card is
 also available as `type: custom:sk19-projector-card`.
 
 ## Repo contents

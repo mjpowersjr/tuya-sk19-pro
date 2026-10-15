@@ -64,6 +64,21 @@ def _asset_version() -> str:
     return str(int(max(f.stat().st_mtime for f in files)))
 
 
+DASHBOARD_URL_PATH = "sk19-dashboard"
+
+
+def _dashboard_exists(hass: HomeAssistant) -> bool:
+    """True if the user created the Projector dashboard (it then owns the sidebar entry)."""
+    try:
+        data = hass.data.get("lovelace")
+        dashboards = getattr(data, "dashboards", None)
+        if dashboards is None and isinstance(data, dict):
+            dashboards = data.get("dashboards")
+        return DASHBOARD_URL_PATH in (dashboards or {})
+    except Exception:  # noqa: BLE001 - best effort
+        return False
+
+
 async def _ensure_lovelace_resource(hass: HomeAssistant, url: str) -> bool:
     """Register the card script as a Lovelace resource (storage mode only).
 
@@ -105,13 +120,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     )
     frontend.add_extra_js_url(hass, module_url)
     await _ensure_lovelace_resource(hass, module_url)
+    # With the dashboard present, it owns the sidebar entry (per-user sidebar settings
+    # would otherwise show both). The panel stays reachable at /sk19-projector.
+    in_sidebar = not _dashboard_exists(hass)
     await panel_custom.async_register_panel(
         hass,
         webcomponent_name="sk19-panel",
         frontend_url_path="sk19-projector",
         module_url=module_url,
-        sidebar_title="Projector",
-        sidebar_icon="mdi:movie-open-play",
+        sidebar_title="Projector" if in_sidebar else None,
+        sidebar_icon="mdi:movie-open-play" if in_sidebar else None,
         require_admin=False,
     )
     if await hass.async_add_executor_job(_install_device_config, hass):
