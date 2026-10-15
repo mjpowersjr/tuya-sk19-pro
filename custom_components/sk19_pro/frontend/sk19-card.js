@@ -26,6 +26,7 @@ const CSS = `
 .pend { flex:none; text-align:center; font-size:13px; color:#fff; background:var(--accent); border-radius:10px; padding:6px 10px; margin-top:8px; }
 .tmr { position:absolute; left:6px; top:50%; transform:translateY(-50%); height:44px; min-width:44px; padding:0 12px; border-radius:22px; background:#27324a; border:0; color:#fff; display:flex; gap:6px; align-items:center; justify-content:center; cursor:pointer; font-size:13px; }
 .tmr.run { background:var(--accent); }
+.pwr.busy { opacity:.55; pointer-events:none; }
 .tmr small:empty { display:none; }
 .sheet-bg { position:absolute; inset:0; background:#000a; border-radius:16px; display:flex; align-items:flex-end; z-index:5; }
 .sheet { width:100%; box-sizing:border-box; background:var(--panel); border-radius:16px; padding:16px; margin:8px; }
@@ -213,7 +214,52 @@ class SK19Card extends HTMLElement {
   _s(key) { return this._hass.states[this._e(key)]; }
   _on(key) { const s = this._s(key); return !!s && s.state === "on"; }
   _call(dom, svc, data) { this._hass.callService(dom, svc, data); }
-  _toggle(key) { this._call(this._e(key).split(".")[0], this._on(key) ? "turn_off" : "turn_on", { entity_id: this._e(key) }); }
+  // ---- tap protection (kids, double taps, bursts) ----
+  // True when this control may fire; ignores a repeat tap on the same control inside `ms`.
+  _gate(key, ms = 600) {
+    const now = Date.now();
+    this._lastTap = this._lastTap || {};
+    if (now - (this._lastTap[key] || 0) < ms) return false;
+    this._lastTap[key] = now;
+    return true;
+  }
+  _toggle(key) {
+    if (key === "master") return this._togglePower();
+    if (!this._gate(key)) return;
+    this._call(this._e(key).split(".")[0], this._on(key) ? "turn_off" : "turn_on", { entity_id: this._e(key) });
+  }
+  // The projector takes seconds to act on power and drops writes around it, so rapid on/off only
+  // makes it flap. After a power tap the button is locked briefly, and powering off while a sleep
+  // timer runs needs a second tap (it would silently cancel the timer).
+  _togglePower() {
+    const now = Date.now();
+    if (this._powering || now < (this._powerLock || 0)) return;
+    const turningOff = this._on("master");
+    const CONFIRM = "Tap power again to stop the timer and turn off";
+    if (turningOff && this._timer() && !(now < (this._confirmOffUntil || 0))) {
+      this._confirmOffUntil = now + 3500;
+      this._pendingText = CONFIRM;
+      this._render(true);
+      setTimeout(() => { if (this._pendingText === CONFIRM) { this._pendingText = ""; this._render(true); } }, 3600);
+      return;
+    }
+    this._confirmOffUntil = 0;
+    if (this._pendingText === CONFIRM) this._pendingText = "";
+    this._powerLock = now + 4000;
+    this._call("switch", turningOff ? "turn_off" : "turn_on", { entity_id: this._e("master") });
+    this._render(true);
+    setTimeout(() => this._render(true), 4100);
+  }
+  // Scene taps: the last tap within a short window wins, and re-tapping the active scene is a no-op.
+  _sceneTap(key, option) {
+    if (this._on("master") && !this._powering && this._s(key)?.state === option) return;
+    clearTimeout(this._sceneT);
+    this._sceneWant = { key, option };
+    this._sceneT = setTimeout(() => {
+      const w = this._sceneWant; this._sceneWant = null;
+      if (w) this._applyWhenOn(w.key, w.option);
+    }, 350);
+  }
   _select(key, option) { this._call("select", "select_option", { entity_id: this._e(key), option }); }
   // Numeric entity value; while the device is unavailable/unknown keep showing the last real value
   // instead of NaN (a reload or brief disconnect would otherwise flash "NaN%").
@@ -270,7 +316,7 @@ class SK19Card extends HTMLElement {
     if (!b) { this.shadowRoot.innerHTML = `<style>${CSS}</style><div class="wrap err">SK19 entities not found. Add the device in the Tuya Local integration first.</div>`; return; }
     const keys = Object.keys(SLUGS);
     const tm = this._timer();
-    const sig = this._tab + "|" + this._cat + "|" + this._sheet + "|" + (this._pendingText || "") + "|" + (tm ? tm.end : "") + "|" + keys.map((k) => { const s = this._s(k); return s ? s.state + (s.attributes.brightness ?? "") + (s.attributes.hs_color ?? "") : "-"; }).join(",");
+    const sig = this._tab + "|" + this._cat + "|" + this._sheet + "|" + (Date.now() < (this._powerLock || 0) ? "b" : "") + "|" + (this._pendingText || "") + "|" + (tm ? tm.end : "") + "|" + keys.map((k) => { const s = this._s(k); return s ? s.state + (s.attributes.brightness ?? "") + (s.attributes.hs_color ?? "") : "-"; }).join(",");
     if (!force && sig === this._sig) return;
     if (this._dragging) return;
     this._sig = sig;
@@ -323,7 +369,7 @@ class SK19Card extends HTMLElement {
     const keep = this._saveScroll();
     this.shadowRoot.innerHTML = `<style>${CSS}</style><div class="wrap"><div class="title">Smart 3D Video Projector Light</div>
       <div class="tabs">${tab("projection", "Projection")}${tab("lighting", "Lighting")}${tab("music", "Music")}</div>${this._pendingText ? `<div class="pend">${this._pendingText}</div>` : ""}${body}
-      <div class="bottom"><button class="tmr ${tm ? "run" : ""}" data-tmr-open aria-label="Sleep timer">${ic("timer", 22)}<small data-cd="short">${tm ? this._cdText(tm, true) : ""}</small></button><span></span><button class="pwr ${this._on("master") ? "" : "off"}" data-sw="master">${ic("power", 30)}</button><span></span></div>${this._sheetHtml(tm)}</div>`;
+      <div class="bottom"><button class="tmr ${tm ? "run" : ""}" data-tmr-open aria-label="Sleep timer">${ic("timer", 22)}<small data-cd="short">${tm ? this._cdText(tm, true) : ""}</small></button><span></span><button class="pwr ${this._on("master") ? "" : "off"} ${Date.now() < (this._powerLock || 0) ? "busy" : ""}" data-sw="master">${ic("power", 30)}</button><span></span></div>${this._sheetHtml(tm)}</div>`;
     this._bind();
     this._tickSetup(tm);
     this._fit();
@@ -440,11 +486,12 @@ class SK19Card extends HTMLElement {
     $("[data-tmr-cancel]").forEach((el) => (el.onclick = () => { this._call("sk19_pro", "cancel_timer", {}); this._sheet = false; this._render(true); }));
     $("[data-tab]").forEach((el) => (el.onclick = () => { this._tab = el.dataset.tab; this._render(true); }));
     $("[data-cat]").forEach((el) => (el.onclick = () => { this._cat = el.dataset.cat; this._render(true); }));
-    $("[data-scene]").forEach((el) => (el.onclick = () => this._applyWhenOn("pscene", el.dataset.scene)));
-    $("[data-lscene]").forEach((el) => (el.onclick = () => this._applyWhenOn("cscene", el.dataset.lscene)));
+    $("[data-scene]").forEach((el) => (el.onclick = () => this._sceneTap("pscene", el.dataset.scene)));
+    $("[data-lscene]").forEach((el) => (el.onclick = () => this._sceneTap("cscene", el.dataset.lscene)));
     $("[data-sw]").forEach((el) => (el.onclick = () => this._toggle(el.dataset.sw)));
-    $("[data-nav]").forEach((el) => (el.onclick = () => this._call("button", "press", { entity_id: this._e(el.dataset.nav) })));
+    $("[data-nav]").forEach((el) => (el.onclick = () => { if (this._gate("nav:" + el.dataset.nav)) this._call("button", "press", { entity_id: this._e(el.dataset.nav) }); }));
     $("[data-nextscene]").forEach((el) => (el.onclick = () => {
+      if (!this._gate("nextscene")) return;
       const names = this._cat_data.projections.map((p) => p.name);
       const i = names.indexOf(this._s("pscene")?.state);
       this._select("pscene", names[(i + 1) % names.length]);

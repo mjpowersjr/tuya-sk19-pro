@@ -20,6 +20,8 @@ and icons, and a sleep timer.
 - **A card that looks and behaves like the mobile app**: Projection / Lighting / Music tabs, the same
   names and icons, colour wheel, one-tap presets. Works on phones, tablets (portrait and landscape)
   and desktop; follows the projector as it advances scenes on its own.
+- **Hard to fumble**: the power button cools down after a tap, scene taps are debounced, and
+  powering off with a timer running asks for a second tap.
 - **Sleep timer**: 15/30/60/90 minute presets; dims the picture, fades the sound, then powers off,
   and verifies it actually turned off. Also available as services for automations.
 - **One-click install** with HACS; the device definition is installed for you.

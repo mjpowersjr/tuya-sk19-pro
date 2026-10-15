@@ -45,6 +45,11 @@ Things that look odd but are deliberate:
   replaced. See `register()` at the bottom of the file.
 - **Scroll preservation.** The card rebuilds its DOM on every state change, so scroll positions are
   saved and restored around each render.
+- **Tap protection.** The device takes seconds to act on power and drops writes around it, so rapid
+  taps only make it flap. The power button locks for 4 s after a tap; powering off while a sleep
+  timer runs needs a second tap; scene taps are last-wins with a 350 ms window and re-tapping the
+  active scene is ignored; other toggles ignore repeats within 600 ms. This lives in the card only,
+  so entity controls elsewhere in HA, automations and the hardware remote bypass it.
 - **Last known value.** While the device is unavailable (reload, Wi-Fi blip) numeric labels keep the
   last real value instead of showing `NaN`.
 
