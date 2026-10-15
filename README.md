@@ -51,6 +51,13 @@ State is exposed as `sk19_pro.sleep_timer` (`running` / `idle`, with an `end` at
 - `build_catalogue.py`, `build_lighting.py`, `gen_ha_config.py`, `build_integration.py` –
   regenerate everything from the app's cached panel (`panel/`, not committed)
 
+## Releases
+
+HACS shows version numbers and offers updates from GitHub releases. They are created
+automatically: bump `version` in `custom_components/sk19_pro/manifest.json`, push to `main`, and
+the `Release` workflow checks the integration and publishes `v<version>`. A push without a version
+bump is checked but not released, so HACS only offers real versions.
+
 ## Credentials
 
 The local tools read `sk19.toml` (gitignored; copy `sk19.example.toml`, `chmod 600`) or the

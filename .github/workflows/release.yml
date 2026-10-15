@@ -1,0 +1,46 @@
+name: Release
+
+# Every push to main is checked. If custom_components/sk19_pro/manifest.json carries a version
+# that has no GitHub release yet, one is created (tag v<version>), which is what HACS shows and
+# downloads. To ship: bump "version" in manifest.json and push. Nothing else to do.
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Read version
+        id: v
+        run: echo "version=$(jq -r .version custom_components/sk19_pro/manifest.json)" >> "$GITHUB_OUTPUT"
+
+      - name: Check the integration
+        run: |
+          python3 -m compileall -q custom_components/sk19_pro
+          node --check custom_components/sk19_pro/frontend/sk19-card.js
+          pip install --quiet pyyaml
+          python3 - <<'PY'
+          import json, yaml
+          cfg = yaml.safe_load(open("custom_components/sk19_pro/tuya_local_devices/sk19_pro_projector.yaml"))
+          assert cfg["entities"], "device config has no entities"
+          json.load(open("custom_components/sk19_pro/catalogue.json"))
+          json.load(open("custom_components/sk19_pro/manifest.json"))
+          PY
+
+      - name: Create the release if this version is new
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          tag="v${{ steps.v.outputs.version }}"
+          if gh release view "$tag" >/dev/null 2>&1; then
+            echo "$tag already released"
+          else
+            gh release create "$tag" --target "$GITHUB_SHA" --title "$tag" --generate-notes
+          fi
