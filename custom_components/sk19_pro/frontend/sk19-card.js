@@ -317,7 +317,6 @@ window.customCards.push({ type: "sk19-projector-card", name: "SK19 Pro projector
 /* Field diagnostics: on the dashboard/panel URLs, report what this client sees to the HA log.
  * Everything here is read-only; it only emits one system_log entry per page load. */
 (function sk19Diag() {
-  if (!/^\/sk19-(dashboard|projector)/.test(location.pathname)) return;
   const t0 = performance.now(), errors = [];
   window.addEventListener("error", (e) => errors.push(`${e.message || e.type} @${(e.filename || "").replace(location.origin, "")}:${e.lineno || 0}`), true);
   window.addEventListener("unhandledrejection", (e) => errors.push("rejection: " + String((e.reason && (e.reason.message || e.reason.type)) || e.reason)));
@@ -328,6 +327,8 @@ window.customCards.push({ type: "sk19-projector-card", name: "SK19 Pro projector
     return out;
   };
   const report = async (label) => {
+    // path is checked now, not at load: a cold start into the default dashboard begins at "/"
+    if (!/^\/sk19-(dashboard|projector)/.test(location.pathname)) return;
     const ha = document.querySelector("home-assistant");
     const hass = ha && ha.hass;
     const r = { label, path: location.pathname, ua: navigator.userAgent, loadedAtMs: Math.round(t0), nowMs: Math.round(performance.now()),
@@ -342,4 +343,5 @@ window.customCards.push({ type: "sk19-projector-card", name: "SK19 Pro projector
     }
   };
   setTimeout(() => report("t+5s"), 5000);
+  setTimeout(() => report("t+15s"), 15000);
 })();
