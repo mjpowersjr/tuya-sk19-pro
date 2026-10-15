@@ -7,9 +7,14 @@ assert len({p["name"] for p in proj}) == len(proj), "projection names must be un
 
 head = '''name: Projector light
 products:
+  # cloud product id (Tuya IoT Platform / Smart Life app)
   - id: a5enoboa4fnkicus
     manufacturer: Tuya
-    model: SK19 Pro Smart 3D Video Projector Light
+    model: Smart 3D Video Projector Light (SK19 Pro)
+  # product id the device itself reports on the LAN (seen in Tuya Local's discovery warning)
+  - id: fx1h9mjhadi9mytv
+    manufacturer: Tuya
+    model: Smart 3D Video Projector Light (SK19 Pro)
 entities:
   - entity: switch
     name: Master
