@@ -1,0 +1,444 @@
+{
+ "projections": [
+  {
+   "code": 0,
+   "name": "Starship",
+   "category": "Universe",
+   "image": "img/00_starship.jpg"
+  },
+  {
+   "code": 1,
+   "name": "Star Saga",
+   "category": "Universe",
+   "image": "img/01_star_saga.jpg"
+  },
+  {
+   "code": 2,
+   "name": "Star Planet",
+   "category": "Universe",
+   "image": "img/02_star_planet.jpg"
+  },
+  {
+   "code": 3,
+   "name": "Glow",
+   "category": "Universe",
+   "image": "img/03_glow.jpg"
+  },
+  {
+   "code": 4,
+   "name": "Planet Whisper",
+   "category": "Universe",
+   "image": "img/04_planet_whisper.jpg"
+  },
+  {
+   "code": 5,
+   "name": "Spinning Planet",
+   "category": "Universe",
+   "image": "img/05_spinning_planet.jpg"
+  },
+  {
+   "code": 6,
+   "name": "Planet Nebula",
+   "category": "Universe",
+   "image": "img/06_planet_nebula.jpg"
+  },
+  {
+   "code": 7,
+   "name": "Stellar Planet",
+   "category": "Universe",
+   "image": "img/07_stellar_planet.jpg"
+  },
+  {
+   "code": 8,
+   "name": "Planet Journey",
+   "category": "Universe",
+   "image": "img/08_planet_journey.jpg"
+  },
+  {
+   "code": 9,
+   "name": "Solar system",
+   "category": "Universe",
+   "image": "img/09_solar_system.jpg"
+  },
+  {
+   "code": 10,
+   "name": "Astronaut",
+   "category": "Universe",
+   "image": "img/10_astronaut.jpg"
+  },
+  {
+   "code": 11,
+   "name": "Twelve Zodiac Signs",
+   "category": "Universe",
+   "image": "img/11_twelve_zodiac_signs.jpg"
+  },
+  {
+   "code": 12,
+   "name": "Meteorite Explosion",
+   "category": "Universe",
+   "image": "img/12_meteorite_explosion.jpg"
+  },
+  {
+   "code": 13,
+   "name": "Stellar Pulse",
+   "category": "Universe",
+   "image": "img/13_stellar_pulse.jpg"
+  },
+  {
+   "code": 14,
+   "name": "Time Tunnel",
+   "category": "Universe",
+   "image": "img/14_time_tunnel.jpg"
+  },
+  {
+   "code": 15,
+   "name": "Light of the Starfall",
+   "category": "Universe",
+   "image": "img/15_light_of_the_starfall.jpg"
+  },
+  {
+   "code": 16,
+   "name": "Planet",
+   "category": "Universe",
+   "image": "img/16_planet.jpg"
+  },
+  {
+   "code": 17,
+   "name": "Butterfly Nebula",
+   "category": "Universe",
+   "image": "img/17_butterfly_nebula.jpg"
+  },
+  {
+   "code": 18,
+   "name": "Galaxy",
+   "category": "Universe",
+   "image": "img/18_galaxy.jpg"
+  },
+  {
+   "code": 19,
+   "name": "Cosmic Wonders",
+   "category": "Universe",
+   "image": "img/19_cosmic_wonders.jpg"
+  },
+  {
+   "code": 20,
+   "name": "The Earth",
+   "category": "Universe",
+   "image": "img/20_the_earth.jpg"
+  },
+  {
+   "code": 21,
+   "name": "Through the Nebula",
+   "category": "Universe",
+   "image": "img/21_through_the_nebula.jpg"
+  },
+  {
+   "code": 22,
+   "name": "The Sun",
+   "category": "Universe",
+   "image": "img/22_the_sun.jpg"
+  },
+  {
+   "code": 23,
+   "name": "Nebula",
+   "category": "Universe",
+   "image": "img/23_nebula.jpg"
+  },
+  {
+   "code": 24,
+   "name": "Blue Marble",
+   "category": "Universe",
+   "image": "img/24_blue_marble.jpg"
+  },
+  {
+   "code": 25,
+   "name": "Space Odyssey",
+   "category": "Universe",
+   "image": "img/25_space_odyssey.jpg"
+  },
+  {
+   "code": 26,
+   "name": "Mars",
+   "category": "Universe",
+   "image": "img/26_mars.jpg"
+  },
+  {
+   "code": 27,
+   "name": "The Moon",
+   "category": "Universe",
+   "image": "img/27_the_moon.jpg"
+  },
+  {
+   "code": 28,
+   "name": "Kaleidoscope",
+   "category": "Universe",
+   "image": "img/28_kaleidoscope.jpg"
+  },
+  {
+   "code": 29,
+   "name": "Glowing Atom",
+   "category": "Universe",
+   "image": "img/29_glowing_atom.jpg"
+  },
+  {
+   "code": 30,
+   "name": "Sakura train",
+   "category": "Natural",
+   "image": "img/30_sakura_train.jpg"
+  },
+  {
+   "code": 31,
+   "name": "Natural Universe",
+   "category": "Natural",
+   "image": "img/31_natural_universe.jpg"
+  },
+  {
+   "code": 32,
+   "name": "Aurora",
+   "category": "Natural",
+   "image": "img/32_aurora.jpg"
+  },
+  {
+   "code": 33,
+   "name": "Moonlit Forest",
+   "category": "Natural",
+   "image": "img/33_moonlit_forest.jpg"
+  },
+  {
+   "code": 34,
+   "name": "Butterfly",
+   "category": "Natural",
+   "image": "img/34_butterfly.jpg"
+  },
+  {
+   "code": 35,
+   "name": "Snowy Forest",
+   "category": "Natural",
+   "image": "img/35_snowy_forest.jpg"
+  },
+  {
+   "code": 36,
+   "name": "Ice Cave",
+   "category": "Natural",
+   "image": "img/36_ice_cave.jpg"
+  },
+  {
+   "code": 37,
+   "name": "Cave Exploration",
+   "category": "Natural",
+   "image": "img/37_cave_exploration.jpg"
+  },
+  {
+   "code": 38,
+   "name": "Spacce Time Vortex",
+   "category": "Natural",
+   "image": "img/38_spacce_time_vortex.jpg"
+  },
+  {
+   "code": 39,
+   "name": "Babbling Brook",
+   "category": "Natural",
+   "image": "img/39_babbling_brook.jpg"
+  },
+  {
+   "code": 40,
+   "name": "Night Sky",
+   "category": "Natural",
+   "image": "img/40_night_sky.jpg"
+  },
+  {
+   "code": 41,
+   "name": "Stillnight Valley",
+   "category": "Natural",
+   "image": "img/41_stillnight_valley.jpg"
+  },
+  {
+   "code": 42,
+   "name": "Starry Sky Vortex",
+   "category": "Natural",
+   "image": "img/42_starry_sky_vortex.jpg"
+  },
+  {
+   "code": 43,
+   "name": "Fireworks",
+   "category": "Natural",
+   "image": "img/43_fireworks.jpg"
+  },
+  {
+   "code": 44,
+   "name": "Fish",
+   "category": "Animal",
+   "image": "img/44_fish.jpg"
+  },
+  {
+   "code": 45,
+   "name": "Halfmoon betta",
+   "category": "Animal",
+   "image": "img/45_halfmoon_betta.jpg"
+  },
+  {
+   "code": 46,
+   "name": "Shark",
+   "category": "Animal",
+   "image": "img/46_shark.jpg"
+  },
+  {
+   "code": 47,
+   "name": "Jellyfish",
+   "category": "Animal",
+   "image": "img/47_jellyfish.jpg"
+  },
+  {
+   "code": 48,
+   "name": "Cat",
+   "category": "Animal",
+   "image": "img/48_cat.jpg"
+  },
+  {
+   "code": 49,
+   "name": "Rainbow unicorn",
+   "category": "Animal",
+   "image": "img/49_rainbow_unicorn.jpg"
+  },
+  {
+   "code": 50,
+   "name": "Birds",
+   "category": "Animal",
+   "image": "img/50_birds.jpg"
+  },
+  {
+   "code": 51,
+   "name": "Peacock",
+   "category": "Animal",
+   "image": "img/51_peacock.jpg"
+  },
+  {
+   "code": 52,
+   "name": "Eagle",
+   "category": "Animal",
+   "image": "img/52_eagle.jpg"
+  },
+  {
+   "code": 53,
+   "name": "Western dragon",
+   "category": "Animal",
+   "image": "img/53_western_dragon.jpg"
+  },
+  {
+   "code": 54,
+   "name": "Tyrannosaurus",
+   "category": "Animal",
+   "image": "img/54_tyrannosaurus.jpg"
+  },
+  {
+   "code": 55,
+   "name": "Tiger",
+   "category": "Animal",
+   "image": "img/55_tiger.jpg"
+  },
+  {
+   "code": 56,
+   "name": "Happy birthday",
+   "category": "Festival",
+   "image": "img/56_happy_birthday.jpg"
+  },
+  {
+   "code": 57,
+   "name": "Magic Christmas Globe",
+   "category": "Festival",
+   "image": "img/57_magic_christmas_globe.jpg"
+  },
+  {
+   "code": 58,
+   "name": "April Fools Day",
+   "category": "Festival",
+   "image": "img/58_april_fools_day.jpg"
+  },
+  {
+   "code": 59,
+   "name": "Halloween Horror",
+   "category": "Festival",
+   "image": "img/59_halloween_horror.jpg"
+  }
+ ],
+ "lighting": [
+  {
+   "code": 0,
+   "name": "Iceland Blue",
+   "image": "img/light_00_icelandBlue.jpg"
+  },
+  {
+   "code": 1,
+   "name": "Glacier Express",
+   "image": "img/light_01_glacierExpress.jpg"
+  },
+  {
+   "code": 2,
+   "name": "Cloud Sea Colorful",
+   "image": "img/light_02_cloudSeaColorful.jpg"
+  },
+  {
+   "code": 3,
+   "name": "Sea Fireworks",
+   "image": "img/light_03_seaFireworks.jpg"
+  },
+  {
+   "code": 4,
+   "name": "Cabin in the Snow",
+   "image": "img/light_04_cabinInSnow.jpg"
+  },
+  {
+   "code": 5,
+   "name": "Firefly Night",
+   "image": "img/light_05_fireflyNight.jpg"
+  },
+  {
+   "code": 6,
+   "name": "Northern Kingdom",
+   "image": "img/light_06_northernKingdom.jpg"
+  },
+  {
+   "code": 7,
+   "name": "Green Grassland",
+   "image": "img/light_07_greenGrassland.jpg"
+  }
+ ],
+ "ui": {
+  "m_yuzhou": "img/ui_m_yuzhou.jpg",
+  "my_yuzhou": "img/ui_my_yuzhou.jpg",
+  "m_ziran": "img/ui_m_ziran.jpg",
+  "my_ziran": "img/ui_my_ziran.jpg",
+  "m_qingxu": "img/ui_m_qingxu.jpg",
+  "my_qingxu": "img/ui_my_qingxu.jpg",
+  "m_jieri": "img/ui_m_jieri.jpg",
+  "my_jieri": "img/ui_my_jieri.jpg",
+  "pause": "img/ui_pause.jpg",
+  "single_cycle": "img/ui_single_cycle.jpg",
+  "shuffleImg": "img/ui_shuffleImg.jpg",
+  "sequentialPlaybackImg": "img/ui_sequentialPlaybackImg.jpg",
+  "singleTuneCirculationImg": "img/ui_singleTuneCirculationImg.jpg",
+  "lanya": "img/ui_lanya.jpg"
+ },
+ "categories": [
+  {
+   "name": "Universe",
+   "icon": "img/ui_m_yuzhou.jpg",
+   "icon_active": "img/ui_my_yuzhou.jpg"
+  },
+  {
+   "name": "Natural",
+   "icon": "img/ui_m_ziran.jpg",
+   "icon_active": "img/ui_my_ziran.jpg"
+  },
+  {
+   "name": "Animal",
+   "icon": "img/ui_m_qingxu.jpg",
+   "icon_active": "img/ui_my_qingxu.jpg"
+  },
+  {
+   "name": "Festival",
+   "icon": "img/ui_m_jieri.jpg",
+   "icon_active": "img/ui_my_jieri.jpg"
+  }
+ ]
+}

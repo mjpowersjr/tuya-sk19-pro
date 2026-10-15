@@ -1,0 +1,286 @@
+name: Projector light
+products:
+  - id: a5enoboa4fnkicus
+    manufacturer: Tuya
+    model: SK19 Pro Smart 3D Video Projector Light
+entities:
+  - entity: switch
+    name: Master
+    dps:
+      - id: 20
+        type: boolean
+        name: switch
+  - entity: light
+    name: Colour
+    icon: "mdi:palette"
+    dps:
+      - id: 52
+        type: boolean
+        name: switch
+      - id: 24
+        name: rgbhsv
+        type: hex
+        format:
+          - name: h
+            bytes: 2
+            range:
+              min: 0
+              max: 360
+          - name: s
+            bytes: 2
+            range:
+              min: 0
+              max: 1000
+          - name: v
+            bytes: 2
+            range:
+              min: 10
+              max: 1000
+  - entity: switch
+    name: Projection
+    icon: "mdi:movie-open"
+    dps:
+      - id: 105
+        type: boolean
+        name: switch
+  - entity: number
+    name: Projection brightness
+    icon: "mdi:brightness-6"
+    dps:
+      - id: 106
+        type: integer
+        name: value
+        range:
+          min: 0
+          max: 100
+  - entity: switch
+    name: Play
+    icon: "mdi:play-pause"
+    dps:
+      - id: 107
+        type: boolean
+        name: switch
+  - entity: switch
+    name: Sound
+    icon: "mdi:volume-high"
+    dps:
+      - id: 108
+        type: boolean
+        name: switch
+  - entity: number
+    name: Volume
+    icon: "mdi:volume-medium"
+    dps:
+      - id: 109
+        type: integer
+        name: value
+        range:
+          min: 0
+          max: 100
+  - entity: switch
+    name: Bluetooth
+    icon: "mdi:bluetooth"
+    dps:
+      - id: 111
+        type: boolean
+        name: switch
+  - entity: binary_sensor
+    name: Bluetooth connected
+    class: connectivity
+    dps:
+      - id: 120
+        type: string
+        name: sensor
+        mapping:
+          - dps_val: connect
+            value: true
+          - dps_val: disconnect
+            value: false
+  - entity: select
+    name: Playback order
+    icon: "mdi:shuffle-variant"
+    dps:
+      - id: 112
+        type: string
+        name: option
+        mapping:
+          - dps_val: sequence
+            value: Sequence
+          - dps_val: random
+            value: Random
+          - dps_val: single_cycle
+            value: Single cycle
+  - entity: button
+    name: Next
+    icon: "mdi:skip-next"
+    dps:
+      - id: 125
+        type: string
+        name: button
+        optional: true
+        mapping:
+          - dps_val: next
+            value: true
+  - entity: button
+    name: Previous
+    icon: "mdi:skip-previous"
+    dps:
+      - id: 125
+        type: string
+        name: button
+        optional: true
+        mapping:
+          - dps_val: previous
+            value: true
+  - entity: select
+    name: Colour scene
+    icon: "mdi:palette-swatch"
+    dps:
+      - id: 121
+        type: integer
+        name: option
+        mapping:
+          - dps_val: 0
+            value: "Iceland Blue"
+          - dps_val: 1
+            value: "Glacier Express"
+          - dps_val: 2
+            value: "Cloud Sea Colorful"
+          - dps_val: 3
+            value: "Sea Fireworks"
+          - dps_val: 4
+            value: "Cabin in the Snow"
+          - dps_val: 5
+            value: "Firefly Night"
+          - dps_val: 6
+            value: "Northern Kingdom"
+          - dps_val: 7
+            value: "Green Grassland"
+  - entity: select
+    name: Projection scene
+    icon: "mdi:movie-open-play"
+    dps:
+      - id: 122
+        type: string
+        name: option
+        mapping:
+          - dps_val: "0"
+            value: "Starship"
+          - dps_val: "1"
+            value: "Star Saga"
+          - dps_val: "2"
+            value: "Star Planet"
+          - dps_val: "3"
+            value: "Glow"
+          - dps_val: "4"
+            value: "Planet Whisper"
+          - dps_val: "5"
+            value: "Spinning Planet"
+          - dps_val: "6"
+            value: "Planet Nebula"
+          - dps_val: "7"
+            value: "Stellar Planet"
+          - dps_val: "8"
+            value: "Planet Journey"
+          - dps_val: "9"
+            value: "Solar system"
+          - dps_val: "10"
+            value: "Astronaut"
+          - dps_val: "11"
+            value: "Twelve Zodiac Signs"
+          - dps_val: "12"
+            value: "Meteorite Explosion"
+          - dps_val: "13"
+            value: "Stellar Pulse"
+          - dps_val: "14"
+            value: "Time Tunnel"
+          - dps_val: "15"
+            value: "Light of the Starfall"
+          - dps_val: "16"
+            value: "Planet"
+          - dps_val: "17"
+            value: "Butterfly Nebula"
+          - dps_val: "18"
+            value: "Galaxy"
+          - dps_val: "19"
+            value: "Cosmic Wonders"
+          - dps_val: "20"
+            value: "The Earth"
+          - dps_val: "21"
+            value: "Through the Nebula"
+          - dps_val: "22"
+            value: "The Sun"
+          - dps_val: "23"
+            value: "Nebula"
+          - dps_val: "24"
+            value: "Blue Marble"
+          - dps_val: "25"
+            value: "Space Odyssey"
+          - dps_val: "26"
+            value: "Mars"
+          - dps_val: "27"
+            value: "The Moon"
+          - dps_val: "28"
+            value: "Kaleidoscope"
+          - dps_val: "29"
+            value: "Glowing Atom"
+          - dps_val: "30"
+            value: "Sakura train"
+          - dps_val: "31"
+            value: "Natural Universe"
+          - dps_val: "32"
+            value: "Aurora"
+          - dps_val: "33"
+            value: "Moonlit Forest"
+          - dps_val: "34"
+            value: "Butterfly"
+          - dps_val: "35"
+            value: "Snowy Forest"
+          - dps_val: "36"
+            value: "Ice Cave"
+          - dps_val: "37"
+            value: "Cave Exploration"
+          - dps_val: "38"
+            value: "Spacce Time Vortex"
+          - dps_val: "39"
+            value: "Babbling Brook"
+          - dps_val: "40"
+            value: "Night Sky"
+          - dps_val: "41"
+            value: "Stillnight Valley"
+          - dps_val: "42"
+            value: "Starry Sky Vortex"
+          - dps_val: "43"
+            value: "Fireworks"
+          - dps_val: "44"
+            value: "Fish"
+          - dps_val: "45"
+            value: "Halfmoon betta"
+          - dps_val: "46"
+            value: "Shark"
+          - dps_val: "47"
+            value: "Jellyfish"
+          - dps_val: "48"
+            value: "Cat"
+          - dps_val: "49"
+            value: "Rainbow unicorn"
+          - dps_val: "50"
+            value: "Birds"
+          - dps_val: "51"
+            value: "Peacock"
+          - dps_val: "52"
+            value: "Eagle"
+          - dps_val: "53"
+            value: "Western dragon"
+          - dps_val: "54"
+            value: "Tyrannosaurus"
+          - dps_val: "55"
+            value: "Tiger"
+          - dps_val: "56"
+            value: "Happy birthday"
+          - dps_val: "57"
+            value: "Magic Christmas Globe"
+          - dps_val: "58"
+            value: "April Fools Day"
+          - dps_val: "59"
+            value: "Halloween Horror"

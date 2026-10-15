@@ -1,0 +1,14 @@
+{
+  "domain": "sk19_pro",
+  "name": "SK19 Pro Projector",
+  "codeowners": ["@mjpowersjr"],
+  "config_flow": true,
+  "dependencies": ["http", "frontend", "panel_custom"],
+  "after_dependencies": ["tuya_local"],
+  "documentation": "https://github.com/mjpowersjr/tuya-sk19-pro",
+  "integration_type": "service",
+  "iot_class": "calculated",
+  "issue_tracker": "https://github.com/mjpowersjr/tuya-sk19-pro/issues",
+  "requirements": [],
+  "version": "0.1.0"
+}

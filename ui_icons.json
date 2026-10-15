@@ -1,0 +1,16 @@
+{
+  "m_yuzhou": "projections/ui_m_yuzhou.png",
+  "my_yuzhou": "projections/ui_my_yuzhou.png",
+  "m_ziran": "projections/ui_m_ziran.png",
+  "my_ziran": "projections/ui_my_ziran.png",
+  "m_qingxu": "projections/ui_m_qingxu.png",
+  "my_qingxu": "projections/ui_my_qingxu.png",
+  "m_jieri": "projections/ui_m_jieri.png",
+  "my_jieri": "projections/ui_my_jieri.png",
+  "pause": "projections/ui_pause.png",
+  "single_cycle": "projections/ui_single_cycle.png",
+  "shuffleImg": "projections/ui_shuffleImg.png",
+  "sequentialPlaybackImg": "projections/ui_sequentialPlaybackImg.png",
+  "singleTuneCirculationImg": "projections/ui_singleTuneCirculationImg.png",
+  "lanya": "projections/ui_lanya.png"
+}

@@ -1,0 +1,6 @@
+{
+  "config": {
+    "step": {"user": {"title": "SK19 Pro Projector", "description": "Adds the projector panel, icons and tuya-local device config. You still add the device itself through the Tuya Local integration."}},
+    "abort": {"already_configured": "Already set up"}
+  }
+}

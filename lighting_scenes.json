@@ -1,0 +1,58 @@
+[
+  {
+    "code": 0,
+    "dp121": 0,
+    "key": "icelandBlue",
+    "name": "Iceland Blue",
+    "image": "projections/light_00_icelandBlue.png"
+  },
+  {
+    "code": 1,
+    "dp121": 1,
+    "key": "glacierExpress",
+    "name": "Glacier Express",
+    "image": "projections/light_01_glacierExpress.png"
+  },
+  {
+    "code": 2,
+    "dp121": 2,
+    "key": "cloudSeaColorful",
+    "name": "Cloud Sea Colorful",
+    "image": "projections/light_02_cloudSeaColorful.png"
+  },
+  {
+    "code": 3,
+    "dp121": 3,
+    "key": "seaFireworks",
+    "name": "Sea Fireworks",
+    "image": "projections/light_03_seaFireworks.png"
+  },
+  {
+    "code": 4,
+    "dp121": 4,
+    "key": "cabinInSnow",
+    "name": "Cabin in the Snow",
+    "image": "projections/light_04_cabinInSnow.png"
+  },
+  {
+    "code": 5,
+    "dp121": 5,
+    "key": "fireflyNight",
+    "name": "Firefly Night",
+    "image": "projections/light_05_fireflyNight.png"
+  },
+  {
+    "code": 6,
+    "dp121": 6,
+    "key": "northernKingdom",
+    "name": "Northern Kingdom",
+    "image": "projections/light_06_northernKingdom.png"
+  },
+  {
+    "code": 7,
+    "dp121": 7,
+    "key": "greenGrassland",
+    "name": "Green Grassland",
+    "image": "projections/light_07_greenGrassland.png"
+  }
+]

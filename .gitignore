@@ -1,0 +1,5 @@
+device.json
+.venv/
+panel/
+projections/
+__pycache__/
