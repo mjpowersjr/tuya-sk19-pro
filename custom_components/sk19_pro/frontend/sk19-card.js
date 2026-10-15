@@ -313,3 +313,33 @@ if (!customElements.get("sk19-projector-card")) customElements.define("sk19-proj
 if (!customElements.get("sk19-panel")) customElements.define("sk19-panel", SK19Panel);
 window.customCards = window.customCards || [];
 window.customCards.push({ type: "sk19-projector-card", name: "SK19 Pro projector", description: "App-style projector controls" });
+
+/* Field diagnostics: on the dashboard/panel URLs, report what this client sees to the HA log.
+ * Everything here is read-only; it only emits one system_log entry per page load. */
+(function sk19Diag() {
+  if (!/^\/sk19-(dashboard|projector)/.test(location.pathname)) return;
+  const t0 = performance.now(), errors = [];
+  window.addEventListener("error", (e) => errors.push(`${e.message || e.type} @${(e.filename || "").replace(location.origin, "")}:${e.lineno || 0}`), true);
+  window.addEventListener("unhandledrejection", (e) => errors.push("rejection: " + String((e.reason && (e.reason.message || e.reason.type)) || e.reason)));
+  const findAll = (root, sel, out = []) => {
+    if (root.querySelectorAll) root.querySelectorAll(sel).forEach((x) => out.push(x));
+    const all = root.querySelectorAll ? root.querySelectorAll("*") : [];
+    for (const el of all) if (el.shadowRoot) findAll(el.shadowRoot, sel, out);
+    return out;
+  };
+  const report = async (label) => {
+    const ha = document.querySelector("home-assistant");
+    const hass = ha && ha.hass;
+    const r = { label, path: location.pathname, ua: navigator.userAgent, loadedAtMs: Math.round(t0), nowMs: Math.round(performance.now()),
+      user: hass && hass.user && hass.user.name, admin: hass && hass.user && hass.user.is_admin,
+      defined: !!customElements.get("sk19-projector-card"), errors: errors.slice(0, 8) };
+    try { r.perf = performance.getEntriesByType("resource").filter((e) => /sk19_pro/.test(e.name)).map((e) => ({ u: e.name.replace(location.origin, ""), ms: Math.round(e.duration), status: e.responseStatus, bytes: e.transferSize })); } catch (e) { r.perfErr = String(e); }
+    try { r.cards = findAll(document, "sk19-projector-card").length; r.errorCards = findAll(document, "hui-error-card").map((x) => ((x.shadowRoot && x.shadowRoot.textContent) || x.textContent || "").trim().slice(0, 160)); } catch (e) { r.domErr = String(e); }
+    if (hass) {
+      try { r.resources = (await hass.callWS({ type: "lovelace/resources" })).map((x) => x.url).filter((u) => /sk19|button-card/.test(u)); } catch (e) { r.resErr = String((e && (e.message || e.code)) || JSON.stringify(e)); }
+      try { r.cfg = JSON.stringify(await hass.callWS({ type: "lovelace/config", url_path: "sk19-dashboard", force: false })).slice(0, 260); } catch (e) { r.cfgErr = String((e && (e.message || e.code)) || JSON.stringify(e)); }
+      try { await hass.callService("system_log", "write", { message: "SK19 DIAG " + JSON.stringify(r), level: "warning", logger: "sk19_pro.frontend" }); } catch (e) { /* nothing else we can do */ }
+    }
+  };
+  setTimeout(() => report("t+5s"), 5000);
+})();
