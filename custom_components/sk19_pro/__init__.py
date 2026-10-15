@@ -4,8 +4,10 @@ from __future__ import annotations
 import logging
 from pathlib import Path
 
+from aiohttp import web
+
 from homeassistant.components import frontend, panel_custom
-from homeassistant.components.http import StaticPathConfig
+from homeassistant.components.http import HomeAssistantView, StaticPathConfig
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 
@@ -13,6 +15,31 @@ DOMAIN = "sk19_pro"
 URL_BASE = "/sk19_pro"
 DEVICE_FILE = "sk19_pro_projector.yaml"
 _LOGGER = logging.getLogger(__name__)
+
+
+class _NoCacheFileView(HomeAssistantView):
+    """Serve one frontend file with Cache-Control: no-cache so clients always revalidate.
+
+    Static paths get heuristic caching; without this, a card update would be invisible
+    to an already-loaded client until its cache expired.
+    """
+
+    requires_auth = False
+
+    def __init__(self, hass: HomeAssistant, url: str, path: Path, content_type: str) -> None:
+        self.url = url
+        self.name = "api:sk19_pro:" + url.rsplit("/", 1)[-1].replace(".", "_")
+        self._hass = hass
+        self._path = path
+        self._content_type = content_type
+
+    async def get(self, request: web.Request) -> web.Response:
+        body = await self._hass.async_add_executor_job(self._path.read_bytes)
+        return web.Response(
+            body=body,
+            content_type=self._content_type,
+            headers={"Cache-Control": "no-cache"},
+        )
 
 
 def _install_device_config(hass: HomeAssistant) -> bool:
@@ -68,6 +95,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     here = Path(__file__).parent
     version = await hass.async_add_executor_job(_asset_version)
     module_url = f"{URL_BASE}/frontend/sk19-card.js?v={version}"
+    if not hass.data.get(f"{DOMAIN}_views"):
+        # registered before the static path so these exact URLs win the route match
+        for rel, ctype in (("frontend/sk19-card.js", "application/javascript"), ("catalogue.json", "application/json")):
+            hass.http.register_view(_NoCacheFileView(hass, f"{URL_BASE}/{rel}", here / rel, ctype))
+        hass.data[f"{DOMAIN}_views"] = True
     await hass.http.async_register_static_paths(
         [StaticPathConfig(URL_BASE, str(here), cache_headers=False)]
     )

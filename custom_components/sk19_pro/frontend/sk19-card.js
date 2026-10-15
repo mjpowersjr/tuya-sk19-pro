@@ -15,7 +15,7 @@ const CSS = `
 .cat { text-align:center; font-size:13px; cursor:pointer; width:23%; }
 .cat .ic { width:56px; height:56px; margin:0 auto 4px; }
 .cat img { width:56px; height:56px; display:block; border-radius:12px; }
-.grid { background:#ffffff10; border-radius:14px; padding:10px 6px; display:grid; grid-template-columns:repeat(4,1fr); gap:10px 4px; max-height:min(300px,34vh); overflow:auto; }
+.grid { background:#ffffff10; border-radius:14px; padding:10px 6px; display:grid; grid-template-columns:repeat(4,1fr); gap:10px 4px; overflow:auto; }
 .item { text-align:center; font-size:12px; cursor:pointer; line-height:1.15; }
 .item img { width:64px; height:64px; border-radius:50%; object-fit:cover; border:3px solid transparent; box-sizing:border-box; }
 .item.on img { border-color:var(--accent); }
@@ -47,6 +47,17 @@ const CSS = `
 .badge.off { background:#657089; }
 .err { padding:16px; color:#ffb4ab; }
 .body.lighting .b { margin-top:10px; }
+/* fill the available height; only the scene list scrolls, controls stay in view */
+.wrap { display:flex; flex-direction:column; min-height:0; }
+.title, .tabs, .bottom { flex:none; }
+.body { flex:1 1 auto; min-height:0; display:flex; flex-direction:column; }
+.body > .a { flex:1 1 auto; min-height:0; display:flex; flex-direction:column; }
+.body > .b { flex:none; }
+.body .a .cats { flex:none; }
+.body .a .grid { flex:1 1 0; min-height:140px; overflow:auto; }
+.body.lighting > .a { flex:none; }
+.body.lighting > .b { flex:1 1 0; min-height:0; overflow:auto; }
+.body.music { overflow:auto; }
 /* wider card (tablet): bigger touch targets; single column, grows taller in portrait */
 @container (min-width: 640px) {
   :host { --wheel:300px; }
@@ -56,7 +67,7 @@ const CSS = `
   .cats { margin-top:16px; }
   .cat { font-size:15px; }
   .cat .ic, .cat img { width:76px; height:76px; }
-  .grid { grid-template-columns:repeat(5,1fr); gap:18px 8px; padding:14px 8px; max-height:none; overflow:visible; }
+  .grid { grid-template-columns:repeat(5,1fr); gap:18px 8px; padding:14px 8px; }
   .item { font-size:14px; }
   .item img { width:92px; height:92px; }
   .grid.light { grid-template-columns:repeat(4,1fr); max-height:none; }
@@ -73,10 +84,12 @@ const CSS = `
 /* two columns only when the tablet is held landscape */
 @media (orientation: landscape) {
   @container (min-width: 640px) {
-    .body.projection, .body.lighting { display:grid; grid-template-columns:minmax(0,1.6fr) minmax(0,1fr); gap:20px; align-items:start; }
+    .body.projection, .body.lighting { display:grid; grid-template-columns:minmax(0,1.6fr) minmax(0,1fr); gap:20px; align-items:stretch; grid-template-rows:minmax(0,1fr); }
     .body.lighting .b { margin-top:0; }
     .body.projection .b .row:first-child, .body.lighting .a .row { margin-top:0; }
-    .grid { grid-template-columns:repeat(4,1fr); max-height:min(46vh,520px); overflow:auto; }
+    .body > .b { align-self:start; max-height:100%; overflow:auto; }
+    .body.lighting > .a { overflow:auto; }
+    .grid { grid-template-columns:repeat(4,1fr); }
     .grid.light { grid-template-columns:repeat(2,1fr); }
   }
   @container (min-width: 960px) {
@@ -113,11 +126,23 @@ class SK19Card extends HTMLElement {
   constructor() {
     super();
     this.attachShadow({ mode: "open" });
+    this._onResize = () => this._fit();
     this._tab = "projection";
     this._cat = null;
     this._cfg = {};
     this._cat_data = null;
     this._sig = "";
+  }
+  connectedCallback() {
+    window.addEventListener("resize", this._onResize);
+    requestAnimationFrame(() => this._fit());
+  }
+  disconnectedCallback() { window.removeEventListener("resize", this._onResize); }
+  _fit() {
+    const w = this.shadowRoot && this.shadowRoot.querySelector(".wrap");
+    if (!w) return;
+    const top = w.getBoundingClientRect().top;
+    w.style.height = Math.max(440, Math.floor(window.innerHeight - top - 12)) + "px";
   }
   setConfig(c) { this._cfg = c || {}; }
   getCardSize() { return 8; }
@@ -197,6 +222,7 @@ class SK19Card extends HTMLElement {
       <div class="tabs">${tab("projection", "Projection")}${tab("lighting", "Lighting")}${tab("music", "Music")}</div>${body}
       <div class="bottom"><span></span><button class="pwr ${this._on("master") ? "" : "off"}" data-sw="master">${ic("power", 30)}</button><span></span></div></div>`;
     this._bind();
+    this._fit();
   }
   _orderIcon(d) {
     const o = this._s("order")?.state;
