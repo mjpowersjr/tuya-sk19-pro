@@ -123,6 +123,13 @@ and `last_run` for the previous result).
 `sk19.example.toml` to `sk19.toml` (gitignored, `chmod 600`) or use `SK19_DEVICE_ID`, `SK19_HOST`,
 `SK19_LOCAL_KEY`. Home Assistant holds the device's single LAN connection while it runs.
 
+## License
+
+The code and documentation are [MIT licensed](LICENSE). The scene artwork and photos are **not**:
+the thumbnails in `custom_components/sk19_pro/img/` come from the device's app and the product
+photo from a retail listing, and they stay with their owners. See [NOTICE.md](NOTICE.md) for the
+exact list and what to do if you fork.
+
 ## Credits and notes
 
 - Built on [Tuya Local](https://github.com/make-all/tuya-local) by @make-all.
