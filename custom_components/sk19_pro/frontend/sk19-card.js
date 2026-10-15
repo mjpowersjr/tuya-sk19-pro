@@ -213,6 +213,15 @@ class SK19Card extends HTMLElement {
   _call(dom, svc, data) { this._hass.callService(dom, svc, data); }
   _toggle(key) { this._call(this._e(key).split(".")[0], this._on(key) ? "turn_off" : "turn_on", { entity_id: this._e(key) }); }
   _select(key, option) { this._call("select", "select_option", { entity_id: this._e(key), option }); }
+  // Numeric entity value; while the device is unavailable/unknown keep showing the last real value
+  // instead of NaN (a reload or brief disconnect would otherwise flash "NaN%").
+  _num_(key) {
+    const v = this._s(key)?.state;
+    const n = v === undefined || v === "" ? NaN : Number(v);
+    this._lastNum = this._lastNum || {};
+    if (Number.isFinite(n)) this._lastNum[key] = n;
+    return this._lastNum[key] ?? 0;
+  }
   _num(key, value) { this._call("number", "set_value", { entity_id: this._e(key), value }); }
 
   _render(force) {
@@ -250,7 +259,7 @@ class SK19Card extends HTMLElement {
     if (this._tab === "projection") {
       const cats = d.categories.map((c) => `<div class="cat ${c.name === this._cat ? "on" : ""}" data-cat="${c.name}"><div class="ic"><img src="${img(c.name === this._cat ? c.icon_active : c.icon)}"></div>${c.name}</div>`).join("");
       const items = d.projections.filter((p) => p.category === this._cat).map((p) => `<div class="item ${p.name === cur ? "on" : ""}" data-scene="${p.name}"><img src="${img(p.image)}"><div>${p.name}</div></div>`).join("");
-      const br = Number(this._s("bright")?.state ?? 0), vol = Number(this._s("volume")?.state ?? 0);
+      const br = this._num_("bright"), vol = this._num_("volume");
       body = `<div class="body projection"><div class="a"><div class="cats">${cats}</div><div class="grid">${items}</div></div><div class="b">
         <div class="row"><div class="hd">Brightness<div class="sw ${this._on("projection") ? "on" : ""}" data-sw="projection"></div></div>
           <div class="sl"><input type="range" min="0" max="100" value="${br}" data-num="bright"><span>${br}%</span></div></div>
@@ -259,8 +268,10 @@ class SK19Card extends HTMLElement {
         <div class="btns"><button data-order="1" title="Playback order">${this._orderIcon(d)}</button>
           <button data-sw="play">${ic(this._on("play") ? "pause" : "play")}</button><button data-nextscene title="Next projection">${ic("next")}</button></div></div></div>`;
     } else if (this._tab === "lighting") {
-      const L = this._s("colour"), h = L?.attributes?.hs_color?.[0] ?? 0;
-      const bri = Math.round(((L?.attributes?.brightness ?? 0) / 255) * 100);
+      const L = this._s("colour");
+      if (L && L.state === "on" && L.attributes.hs_color) this._lastLight = { h: L.attributes.hs_color[0], b: L.attributes.brightness ?? 0 };
+      const h = this._lastLight ? this._lastLight.h : 0;
+      const bri = Math.round(((this._lastLight ? this._lastLight.b : 0) / 255) * 100);
       const cs = this._s("cscene")?.state;
       const items = d.lighting.map((l) => `<div class="item ${l.name === cs ? "on" : ""}" data-lscene="${l.name}"><img src="${img(l.image)}"><div>${l.name}</div></div>`).join("");
       body = `<div class="body lighting"><div class="a"><div class="row"><div class="hd">Color<div class="sw ${this._on("colour") ? "on" : ""}" data-sw="colour"></div></div>
@@ -269,7 +280,7 @@ class SK19Card extends HTMLElement {
         <div class="sl">${ic("sun", 22)}<input type="range" min="1" max="100" value="${bri}" data-bri><span>${bri}%</span></div></div>
         </div><div class="b"><div class="grid light">${items}</div></div></div>`;
     } else {
-      const vol = Number(this._s("volume")?.state ?? 0), conn = this._s("btconn")?.state === "on";
+      const vol = this._num_("volume"), conn = this._s("btconn")?.state === "on";
       body = `<div class="body music"><div class="row"><div class="hd">Bluetooth<div class="sw ${this._on("bluetooth") ? "on" : ""}" data-sw="bluetooth"></div></div></div>
         <div class="badge ${conn ? "" : "off"}">${conn ? "Bluetooth Connected" : "Bluetooth Disconnected"}</div>
         <div class="disc">${ic("note", 80)}</div>
