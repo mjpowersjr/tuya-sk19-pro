@@ -126,7 +126,7 @@ class SK19Card extends HTMLElement {
   constructor() {
     super();
     this.attachShadow({ mode: "open" });
-    this._onResize = () => this._fit();
+    this._onResize = () => { try { this._fit(); } catch (e) { console.error(e); } };
     this._tab = "projection";
     this._cat = null;
     this._cfg = {};
@@ -135,7 +135,7 @@ class SK19Card extends HTMLElement {
   }
   connectedCallback() {
     window.addEventListener("resize", this._onResize);
-    requestAnimationFrame(() => this._fit());
+    requestAnimationFrame(() => { try { this._fit(); } catch (e) { this._showError(e); } });
   }
   disconnectedCallback() { window.removeEventListener("resize", this._onResize); }
   // nearest ancestor (crossing shadow roots) that is scrollable and currently overflowing
@@ -196,6 +196,14 @@ class SK19Card extends HTMLElement {
   _num(key, value) { this._call("number", "set_value", { entity_id: this._e(key), value }); }
 
   _render(force) {
+    try { this._renderInner(force); } catch (e) { this._showError(e); }
+  }
+  _showError(e) {
+    console.error("[sk19-projector-card]", e);
+    const msg = String((e && (e.stack || e.message)) || e).replace(/[<&]/g, (c) => ({ "<": "&lt;", "&": "&amp;" }[c])).slice(0, 600);
+    this.shadowRoot.innerHTML = `<style>${CSS}</style><div class="wrap"><div class="err"><b>SK19 card error</b><br>${msg}<br><small>${navigator.userAgent}</small></div></div>`;
+  }
+  _renderInner(force) {
     if (!this._hass || !this._cat_data) { if (this._error) this.shadowRoot.innerHTML = `<div class="err">${this._error}</div>`; return; }
     const b = this._base();
     if (!b) { this.shadowRoot.innerHTML = `<style>${CSS}</style><div class="wrap err">SK19 entities not found. Add the device in the Tuya Local integration first.</div>`; return; }
