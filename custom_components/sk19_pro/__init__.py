@@ -9,7 +9,11 @@ from aiohttp import web
 from homeassistant.components import frontend, panel_custom
 from homeassistant.components.http import HomeAssistantView, StaticPathConfig
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.helpers import config_validation as cv
+import voluptuous as vol
+
+from .timer import SleepTimer
 
 DOMAIN = "sk19_pro"
 URL_BASE = "/sk19_pro"
@@ -132,6 +136,28 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         sidebar_icon="mdi:movie-open-play" if in_sidebar else None,
         require_admin=False,
     )
+    timer = hass.data.get(f"{DOMAIN}_timer")
+    if timer is None:
+        timer = hass.data[f"{DOMAIN}_timer"] = SleepTimer(hass)
+        await timer.async_setup()
+
+        async def _start(call: ServiceCall) -> None:
+            await timer.async_start(
+                call.data["minutes"], call.data["fade_seconds"], call.data.get("entity_base")
+            )
+
+        async def _cancel(call: ServiceCall) -> None:
+            await timer.async_cancel()
+
+        hass.services.async_register(
+            DOMAIN, "start_timer", _start,
+            vol.Schema({
+                vol.Required("minutes"): vol.All(vol.Coerce(int), vol.Range(min=1, max=720)),
+                vol.Optional("fade_seconds", default=60): vol.All(vol.Coerce(int), vol.Range(min=0, max=300)),
+                vol.Optional("entity_base"): cv.string,
+            }),
+        )
+        hass.services.async_register(DOMAIN, "cancel_timer", _cancel, vol.Schema({}))
     if await hass.async_add_executor_job(_install_device_config, hass):
         _LOGGER.warning(
             "Installed %s into tuya_local; restart Home Assistant to load it", DEVICE_FILE

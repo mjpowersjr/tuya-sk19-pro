@@ -22,6 +22,18 @@ const CSS = `
 .grid.light { grid-template-columns:repeat(4,1fr); background:#0e1624; }
 .grid.light img { background:#162235; padding:8px; border-radius:50%; }
 .body .a, .body .b { position:relative; }
+.wrap, .bottom { position:relative; }
+.tmr { position:absolute; left:6px; top:50%; transform:translateY(-50%); height:44px; min-width:44px; padding:0 12px; border-radius:22px; background:#27324a; border:0; color:#fff; display:flex; gap:6px; align-items:center; justify-content:center; cursor:pointer; font-size:13px; }
+.tmr.run { background:var(--accent); }
+.sheet-bg { position:absolute; inset:0; background:#000a; border-radius:16px; display:flex; align-items:flex-end; z-index:5; }
+.sheet { width:100%; box-sizing:border-box; background:var(--panel); border-radius:16px; padding:16px; margin:8px; }
+.sheet h3 { margin:0 0 4px; font-size:17px; text-align:center; font-weight:600; }
+.sheet .cd { text-align:center; font-size:40px; font-variant-numeric:tabular-nums; margin:6px 0 2px; }
+.sheet .sub { text-align:center; color:var(--muted); font-size:13px; margin-bottom:12px; }
+.presets { display:grid; grid-template-columns:repeat(4,1fr); gap:8px; }
+.presets button, .sheet .x { background:#ffffff18; border:0; color:#fff; border-radius:12px; padding:14px 0; font-size:15px; cursor:pointer; }
+.sheet .x { width:100%; margin-top:10px; }
+.sheet .x.cancel { background:#8a3030; }
 .grid.more { -webkit-mask-image:linear-gradient(to bottom,#000 calc(100% - 34px),transparent); mask-image:linear-gradient(to bottom,#000 calc(100% - 34px),transparent); }
 .more-hint { position:absolute; width:11px; height:11px; margin-left:-6px; border-right:2px solid #fff; border-bottom:2px solid #fff; transform:rotate(45deg); opacity:0; pointer-events:none; transition:opacity .2s; }
 .more-hint.on { opacity:.75; animation:hint-bob 1.6s ease-in-out infinite; }
@@ -114,6 +126,7 @@ const PATHS = {
   bulb: "M9 21c0 .55.45 1 1 1h4c.55 0 1-.45 1-1v-1H9v1zm3-19C8.14 2 5 5.14 5 9c0 2.38 1.19 4.47 3 5.74V17c0 .55.45 1 1 1h6c.55 0 1-.45 1-1v-2.26c1.81-1.27 3-3.36 3-5.74 0-3.86-3.14-7-7-7z",
   note: "M12 3v10.55A4 4 0 1 0 14 17V7h4V3h-6z",
   volume: "M3 9v6h4l5 5V4L7 9H3zm13.5 3A4.5 4.5 0 0 0 14 7.97v8.05c1.48-.73 2.5-2.25 2.5-4.02z",
+  timer: "M15 1H9v2h6V1zm-4 13h2V8h-2v6zm8.03-6.61 1.42-1.42c-.43-.51-.9-.99-1.41-1.41l-1.42 1.42A8.962 8.962 0 0 0 12 4c-4.97 0-9 4.03-9 9s4.02 9 9 9a8.994 8.994 0 0 0 7.03-14.61zM12 20c-3.87 0-7-3.13-7-7s3.13-7 7-7 7 3.13 7 7-3.13 7-7 7z",
   sun: "M12 7a5 5 0 1 0 0 10 5 5 0 0 0 0-10zM2 13h2v-2H2v2zm18 0h2v-2h-2v2zM11 2v2h2V2h-2zm0 18v2h2v-2h-2zM5.99 4.58L4.58 5.99l1.41 1.42 1.42-1.41-1.42-1.42zm12.02 12.02l-1.42 1.41 1.42 1.42 1.41-1.42-1.41-1.41zM4.58 18.01l1.41 1.41 1.42-1.41-1.42-1.42-1.41 1.42zM18.01 5.99l1.41-1.41-1.41-1.42-1.42 1.42 1.42 1.41z",
 };
 const ic = (n, px = 26) => `<svg viewBox="0 0 24 24" width="${px}" height="${px}" fill="currentColor" aria-hidden="true"><path d="${PATHS[n]}"/></svg>`;
@@ -138,12 +151,13 @@ class SK19Card extends HTMLElement {
     this._cfg = {};
     this._cat_data = null;
     this._sig = "";
+    this._sheet = false;
   }
   connectedCallback() {
     window.addEventListener("resize", this._onResize);
     requestAnimationFrame(() => { try { this._fit(); } catch (e) { this._showError(e); } });
   }
-  disconnectedCallback() { window.removeEventListener("resize", this._onResize); }
+  disconnectedCallback() { window.removeEventListener("resize", this._onResize); clearInterval(this._tick); this._tick = null; }
   // nearest ancestor (crossing shadow roots) that is scrollable and currently overflowing
   _overflowingScroller() {
     const up = (n) => n.assignedSlot || n.parentElement || (n.getRootNode() instanceof ShadowRoot ? n.getRootNode().host : null);
@@ -214,7 +228,8 @@ class SK19Card extends HTMLElement {
     const b = this._base();
     if (!b) { this.shadowRoot.innerHTML = `<style>${CSS}</style><div class="wrap err">SK19 entities not found. Add the device in the Tuya Local integration first.</div>`; return; }
     const keys = Object.keys(SLUGS);
-    const sig = this._tab + "|" + this._cat + "|" + keys.map((k) => { const s = this._s(k); return s ? s.state + (s.attributes.brightness ?? "") + (s.attributes.hs_color ?? "") : "-"; }).join(",");
+    const tm = this._timer();
+    const sig = this._tab + "|" + this._cat + "|" + this._sheet + "|" + (tm ? tm.end : "") + "|" + keys.map((k) => { const s = this._s(k); return s ? s.state + (s.attributes.brightness ?? "") + (s.attributes.hs_color ?? "") : "-"; }).join(",");
     if (!force && sig === this._sig) return;
     if (this._dragging) return;
     this._sig = sig;
@@ -256,8 +271,9 @@ class SK19Card extends HTMLElement {
     const tab = (k, t) => `<button class="${this._tab === k ? "on" : ""}" data-tab="${k}">${t}</button>`;
     this.shadowRoot.innerHTML = `<style>${CSS}</style><div class="wrap"><div class="title">Smart 3D Video Projector Light</div>
       <div class="tabs">${tab("projection", "Projection")}${tab("lighting", "Lighting")}${tab("music", "Music")}</div>${body}
-      <div class="bottom"><span></span><button class="pwr ${this._on("master") ? "" : "off"}" data-sw="master">${ic("power", 30)}</button><span></span></div></div>`;
+      <div class="bottom"><button class="tmr ${tm ? "run" : ""}" data-tmr-open aria-label="Sleep timer">${ic("timer", 22)}<small data-cd="short">${tm ? this._cdText(tm, true) : ""}</small></button><span></span><button class="pwr ${this._on("master") ? "" : "off"}" data-sw="master">${ic("power", 30)}</button><span></span></div>${this._sheetHtml(tm)}</div>`;
     this._bind();
+    this._tickSetup(tm);
     this._fit();
     this._hints();
   }
@@ -278,6 +294,39 @@ class SK19Card extends HTMLElement {
       requestAnimationFrame(update);
     });
   }
+  // ---- sleep timer ----
+  _timer() {
+    const s = this._hass && this._hass.states["sk19_pro.sleep_timer"];
+    if (!s || s.state !== "running") return null;
+    return { end: Date.parse(s.attributes.end), minutes: s.attributes.minutes, fade: s.attributes.fade_seconds };
+  }
+  _cdText(tm, short) {
+    const left = Math.max(0, Math.round((tm.end - Date.now()) / 1000));
+    const m = Math.floor(left / 60), sec = left % 60;
+    if (short) return m >= 1 ? `${m + (sec ? 1 : 0)}m` : `${sec}s`;
+    return `${m}:${String(sec).padStart(2, "0")}`;
+  }
+  _sheetHtml(tm) {
+    if (!this._sheet) return "";
+    const presets = [15, 30, 60, 90].map((m) => `<button data-tmr-min="${m}">${m} min</button>`).join("");
+    return `<div class="sheet-bg" data-tmr-close><div class="sheet" data-tmr-keep>
+      <h3>Sleep timer</h3>
+      ${tm ? `<div class="cd" data-cd="long">${this._cdText(tm, false)}</div><div class="sub">Volume fades out for the last ${tm.fade}s, then the projector turns off</div>`
+           : `<div class="sub">Fade the music out, then turn the projector off</div>`}
+      <div class="presets">${presets}</div>
+      ${tm ? `<button class="x cancel" data-tmr-cancel>Cancel timer</button>` : ""}
+      <button class="x" data-tmr-close>Close</button></div></div>`;
+  }
+  _tickSetup(tm) {
+    clearInterval(this._tick);
+    this._tick = null;
+    if (!tm) return;
+    this._tick = setInterval(() => {
+      const t = this._timer();
+      if (!t) { clearInterval(this._tick); this._tick = null; return; }
+      this.shadowRoot.querySelectorAll("[data-cd]").forEach((el) => { el.textContent = this._cdText(t, el.dataset.cd === "short"); });
+    }, 1000);
+  }
   _orderIcon(d) {
     const o = this._s("order")?.state;
     const m = { "Sequence": d.ui.sequentialPlaybackImg, "Random": d.ui.shuffleImg, "Single cycle": d.ui.single_cycle };
@@ -285,6 +334,13 @@ class SK19Card extends HTMLElement {
   }
   _bind() {
     const $ = (s) => this.shadowRoot.querySelectorAll(s);
+    $("[data-tmr-open]").forEach((el) => (el.onclick = () => { this._sheet = true; this._render(true); }));
+    $("[data-tmr-close]").forEach((el) => (el.onclick = (ev) => { if (ev.target !== el) return; this._sheet = false; this._render(true); }));
+    $("[data-tmr-min]").forEach((el) => (el.onclick = () => {
+      this._call("sk19_pro", "start_timer", { minutes: Number(el.dataset.tmrMin), fade_seconds: 60, entity_base: this._base() });
+      this._sheet = false; this._render(true);
+    }));
+    $("[data-tmr-cancel]").forEach((el) => (el.onclick = () => { this._call("sk19_pro", "cancel_timer", {}); this._sheet = false; this._render(true); }));
     $("[data-tab]").forEach((el) => (el.onclick = () => { this._tab = el.dataset.tab; this._render(true); }));
     $("[data-cat]").forEach((el) => (el.onclick = () => { this._cat = el.dataset.cat; this._render(true); }));
     $("[data-scene]").forEach((el) => (el.onclick = () => this._select("pscene", el.dataset.scene)));

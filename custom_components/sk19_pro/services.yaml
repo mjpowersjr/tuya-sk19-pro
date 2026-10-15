@@ -1,0 +1,31 @@
+start_timer:
+  name: Start sleep timer
+  description: Turn the projector off after a delay, fading the volume down over the last seconds. Replaces any running timer.
+  fields:
+    minutes:
+      name: Minutes
+      description: How long until the projector turns off.
+      required: true
+      example: 30
+      selector:
+        number:
+          min: 1
+          max: 720
+          unit_of_measurement: min
+    fade_seconds:
+      name: Fade seconds
+      description: How long before the end the volume starts fading out (0 disables the fade).
+      default: 60
+      selector:
+        number:
+          min: 0
+          max: 300
+          unit_of_measurement: s
+    entity_base:
+      name: Entity base
+      description: Entity prefix of the projector, only needed if you have more than one.
+      selector:
+        text:
+cancel_timer:
+  name: Cancel sleep timer
+  description: Stop the running timer and restore the volume if it was fading.

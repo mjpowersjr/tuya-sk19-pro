@@ -24,6 +24,24 @@ tablet): Settings → Dashboards → Add dashboard → *New from scratch*, title
 When that dashboard exists the integration hides its own sidebar entry so you don't see two. The card is
 also available as `type: custom:sk19-projector-card`.
 
+## Sleep timer
+
+The card has a timer button (bottom-left) with 15 / 30 / 60 / 90 minute presets and a live
+countdown. When it runs out, the music volume fades down over the last 60 seconds, then the
+projector turns off and the volume is put back. Switching the projector off by hand cancels the
+timer. A running timer survives a Home Assistant restart.
+
+It is also available to automations (the same engine, so one-shot alarms can reuse it later):
+
+```yaml
+action: sk19_pro.start_timer
+data: { minutes: 45, fade_seconds: 60 }   # entity_base is only needed with several projectors
+---
+action: sk19_pro.cancel_timer
+```
+
+State is exposed as `sk19_pro.sleep_timer` (`running` / `idle`, with an `end` attribute).
+
 ## Repo contents
 
 - `custom_components/sk19_pro/` – the HACS integration (panel, icons, catalogue, device YAML)
