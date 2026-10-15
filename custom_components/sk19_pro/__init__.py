@@ -30,6 +30,13 @@ class _NoCacheFileView(HomeAssistantView):
         self._content_type = content_type
 
     async def get(self, request: web.Request) -> web.Response:
+        if self.url.endswith(".js"):
+            # field diagnostics: shows which clients really fetch the card script, and when
+            _LOGGER.warning(
+                "SK19 script fetched by %s (cache-bust %s)",
+                request.headers.get("User-Agent", "?")[:160],
+                request.query.get("v", "none"),
+            )
         body = await self._hass.async_add_executor_job(self._path.read_bytes)
         # The script URL carries ?v=<content version>, so a versioned request can be cached
         # hard: a cold start then registers the card from disk cache instead of waiting on a
